@@ -1,15 +1,21 @@
 package main
 
 import (
-	"fmt"
-	"os"
+	"github.com/spf13/cobra"
+	"go.uber.org/fx"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
 func main() {
-	if len(os.Args) > 1 {
-		fmt.Printf("Hello from kubectl-plugin-arcane!\n")
-		fmt.Printf("Arguments: %v\n", os.Args[1:])
-	} else {
-		fmt.Println("kubectl-plugin-arcane")
+	var rootCmd = &cobra.Command{
+		Use:   "my-app",
+		Short: "A brief description",
+		Run: func(cmd *cobra.Command, args []string) {
+			// Code that runs when no subcommand is provided
+		},
 	}
+	configFlags := genericclioptions.NewConfigFlags(true)
+	configFlags.AddFlags(rootCmd.PersistentFlags())
+
+	fx.Supply(configFlags)
 }

@@ -1,0 +1,12 @@
+profile: cover.out
+
+local-prefix: "github.com/SneaksAndData/arcane-operator"
+
+threshold:
+  file: 70
+  package: 70
+  total: 75
+
+exclude:
+  paths:
+    - main.go # application entry point

@@ -1,0 +1,10 @@
+apiVersion: v2
+name: setup
+description: Integration test setup chart for arcane kubectl plugin
+type: application
+version: 0.0.0
+appVersion: "0.0.0"
+dependencies:
+  - name: arcane-crd
+    version: v0.0.7
+    repository: oci://ghcr.io/sneaksanddata/helm

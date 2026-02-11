@@ -1,16 +1,19 @@
 package interfaces
 
-import "github.com/spf13/cobra"
+import (
+	"context"
+	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/models"
+)
 
 // StreamService defines the interface for managing streaming operations, including starting, stopping, and backfilling streams.
 type StreamService interface {
 
 	// Start initiates a stream based on the provided command and arguments.
-	Start(cmd *cobra.Command, args []string) error
+	Start(ctx context.Context, parameters *models.StartParameters) error
 
 	// Stop terminates an active stream based on the provided command and arguments.
-	Stop(cmd *cobra.Command, args []string) error
+	Stop(ctx context.Context, parameters *models.StopParameters) error
 
 	// Backfill performs a backfill operation for a stream based on the provided command and arguments.
-	Backfill(cmd *cobra.Command, args []string) error
+	Backfill(ctx context.Context, parameters *models.BackfillParameters) error
 }

@@ -3,6 +3,7 @@ package commands
 import (
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/interfaces"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/internal"
+	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/models"
 	"github.com/spf13/cobra"
 )
 
@@ -12,12 +13,18 @@ type StreamStart interface {
 }
 
 // NewStreamStart creates a new instance of the StreamStart command, which runs a stream start operation.
-func NewStreamStart(operator interfaces.StreamService) StreamStart {
+func NewStreamStart(streamService interfaces.StreamService) StreamStart {
 	cmd := cobra.Command{
 		Use:   "stream <stream-class> <stream-id>",
 		Args:  cobra.ExactArgs(2),
 		Short: "Run a stream command",
-		RunE:  operator.Start,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			startParameters, err := models.NewStartParameters(cmd, args)
+			if err != nil {
+				return err
+			}
+			return streamService.Start(cmd.Context(), startParameters)
+		},
 	}
 	return internal.NewGenericCommand(&cmd)
 }

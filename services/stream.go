@@ -65,7 +65,7 @@ func (s *stream) Backfill(ctx context.Context, parameters *models.BackfillParame
 				return fmt.Errorf("unexpected object type: %T", event.Object)
 			}
 
-			if bfr.Spec.Completed == true {
+			if bfr.Spec.Completed {
 				return nil
 			}
 

@@ -24,6 +24,7 @@ func main() {
 		fx.Provide(commands.NewStreamBackfill),
 		fx.Provide(providers.ProvideConfigFlags),
 		fx.Provide(providers.ProvideRestConfig),
+		fx.Provide(providers.ProvideClientSet),
 		fx.NopLogger,
 		fx.Provide(fx.Annotate(services.NewStreamService, fx.As(new(interfaces.StreamService)))),
 		fx.Invoke(

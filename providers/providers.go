@@ -1,6 +1,7 @@
 package providers
 
 import (
+	"github.com/SneaksAndData/arcane-operator/pkg/generated/clientset/versioned"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/rest"
@@ -20,4 +21,12 @@ func ProvideRestConfig(configFlags *genericclioptions.ConfigFlags) (*rest.Config
 		return nil, err
 	}
 	return restConfig, nil
+}
+
+func ProvideClientSet(restConfig *rest.Config) (*versioned.Clientset, error) {
+	clientSet, err := versioned.NewForConfig(restConfig)
+	if err != nil {
+		return nil, err
+	}
+	return clientSet, nil
 }

@@ -28,7 +28,7 @@ func NewStreamService(clientSet *versioned.Clientset) interfaces.StreamService {
 }
 
 // Backfill is a method that allows users to run a stream backfill operation
-func (s *stream) Backfill(ctx context.Context, parameters *models.BackfillParameters) (*v1.BackfillRequest, error) {
+func (s *stream) Backfill(ctx context.Context, parameters *models.BackfillParameters) error {
 	bfr, err := s.clientSet.
 		StreamingV1().
 		BackfillRequests(parameters.Namespace).
@@ -38,11 +38,11 @@ func (s *stream) Backfill(ctx context.Context, parameters *models.BackfillParame
 			FieldValidation: "Strict",
 		})
 	if err != nil {
-		return nil, fmt.Errorf("error creating backfill request: %w", err)
+		return fmt.Errorf("error creating backfill request: %w", err)
 	}
 
 	if !parameters.Wait {
-		return bfr, nil
+		return nil
 	}
 	watch, err := s.clientSet.StreamingV1().BackfillRequests(parameters.Namespace).Watch(ctx, metav1.ListOptions{
 		FieldSelector:   "metadata.name=" + bfr.Name,
@@ -50,7 +50,7 @@ func (s *stream) Backfill(ctx context.Context, parameters *models.BackfillParame
 		ResourceVersion: bfr.ResourceVersion,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("error watching backfill request: %w", err)
+		return fmt.Errorf("error watching backfill request: %w", err)
 	}
 	defer watch.Stop()
 
@@ -58,19 +58,19 @@ func (s *stream) Backfill(ctx context.Context, parameters *models.BackfillParame
 		select {
 		case event, ok := <-watch.ResultChan():
 			if !ok {
-				return nil, fmt.Errorf("watch channel closed")
+				return fmt.Errorf("watch channel closed")
 			}
 			bfr, ok := event.Object.(*v1.BackfillRequest)
 			if !ok {
-				return nil, fmt.Errorf("unexpected object type: %T", event.Object)
+				return fmt.Errorf("unexpected object type: %T", event.Object)
 			}
 
 			if bfr.Spec.Completed {
-				return bfr, nil
+				return nil
 			}
 
 		case <-ctx.Done():
-			return nil, ctx.Err()
+			return ctx.Err()
 		}
 	}
 }

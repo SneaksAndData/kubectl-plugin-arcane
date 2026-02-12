@@ -2,8 +2,12 @@ package interfaces
 
 import (
 	"context"
+	"errors"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/models"
 )
+
+var ErrAlreadyStopped = errors.New("stream is already stopped")
+var ErrAlreadyRunning = errors.New("stream is already stopped")
 
 // StreamService defines the interface for managing streaming operations, including starting, stopping, and backfilling streams.
 type StreamService interface {

@@ -13,7 +13,7 @@ type StreamStart interface {
 }
 
 // NewStreamStart creates a new instance of the StreamStart command, which runs a stream start operation.
-func NewStreamStart(streamService interfaces.StreamService) StreamStart {
+func NewStreamStart(streamService interfaces.StreamService) StreamStart { // coverage-ignore (trivial)
 	cmd := cobra.Command{
 		Use:   "stream <stream-class> <stream-id>",
 		Args:  cobra.ExactArgs(2),

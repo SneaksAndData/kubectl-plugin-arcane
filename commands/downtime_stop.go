@@ -12,7 +12,7 @@ type DowntimeStopCommand interface {
 }
 
 // NewDowntimeStopCommand creates a new instance of the DowntimeStopCommand, which allows users to stop downtime for a stream or a list of streams.
-func NewDowntimeStopCommand(ds interfaces.DowntimeService) DowntimeStopCommand {
+func NewDowntimeStopCommand(ds interfaces.DowntimeService) DowntimeStopCommand { // coverage-ignore (trivial)
 	cmd := cobra.Command{
 		Use:   "stop <key>",
 		Args:  cobra.ExactArgs(1),

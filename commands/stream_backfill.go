@@ -13,7 +13,7 @@ type StreamBackfill interface {
 }
 
 // NewStreamBackfill creates a new instance of the StreamBackfill command, which runs a stream backfill operation.
-func NewStreamBackfill(streamService interfaces.StreamService) StreamBackfill {
+func NewStreamBackfill(streamService interfaces.StreamService) StreamBackfill { // coverage-ignore (trivial)
 	cmd := cobra.Command{
 		Use:   "backfill <stream-class> <stream-id> [--wait]",
 		Args:  cobra.ExactArgs(2),

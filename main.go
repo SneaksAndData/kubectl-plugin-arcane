@@ -1,10 +1,12 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/interfaces"
+	"github.com/sneaksAndData/kubectl-plugin-arcane/providers"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/services"
 	"go.uber.org/fx"
 )
@@ -20,11 +22,14 @@ func main() {
 		fx.Provide(commands.NewStreamStop),
 		fx.Provide(commands.NewStreamStart),
 		fx.Provide(commands.NewStreamBackfill),
+		fx.Provide(providers.ProvideConfigFlags),
+		fx.Provide(providers.ProvideRestConfig),
+		fx.Provide(providers.ProvideClientSet),
 		fx.NopLogger,
 		fx.Provide(fx.Annotate(services.NewStreamService, fx.As(new(interfaces.StreamService)))),
 		fx.Invoke(
-			func(rootCmd commands.RootCommand, shutDowner fx.Shutdowner) error {
-				err := rootCmd.Execute()
+			func(rootCmd commands.RootCommand, shutDowner fx.Shutdowner, lifeCycle fx.Lifecycle) error {
+				err := rootCmd.GetCommand().ExecuteContext(context.TODO())
 				defer func() {
 					shErr := shutDowner.Shutdown()
 					if shErr != nil {

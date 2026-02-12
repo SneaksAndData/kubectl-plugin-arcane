@@ -3,7 +3,7 @@ default:
 
 fresh: stop up
 
-up: start-kind-cluster build-deps integration-tests mock-stream-plugin manifests
+up: start-kind-cluster build-deps integration-tests operator mock-stream-plugin manifests
 
 start-kind-cluster:
     kind create cluster
@@ -21,6 +21,11 @@ integration-tests:
 install-stream:
     kubectl apply -f integration_tests/manifests/stream_class.yaml
     kubectl apply -f integration_tests/manifests/crd-microsoft-sql-server-stream.yaml
+
+operator:
+    helm install arcane-operator oci://ghcr.io/sneaksanddata/helm/arcane-operator \
+        --namespace default \
+        --version v1.0.4
 
 mock-stream-plugin:
     helm install arcane-stream-mock oci://ghcr.io/sneaksanddata/helm/arcane-stream-mock \

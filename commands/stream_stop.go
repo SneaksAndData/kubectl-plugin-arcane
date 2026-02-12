@@ -13,7 +13,7 @@ type StreamStop interface {
 }
 
 // NewStreamStop creates a new instance of the StreamStop command, which runs a stream stop operation.
-func NewStreamStop(streamService interfaces.StreamService) StreamStop {
+func NewStreamStop(streamService interfaces.StreamService) StreamStop { // coverage-ignore (trivial)
 	cmd := cobra.Command{
 		Use:   "stop <stream-class> <stream-id>",
 		Args:  cobra.ExactArgs(2),

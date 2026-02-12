@@ -8,7 +8,8 @@ import (
 // StopParameters represents the parameters required to perform a stop operation for a stream.
 type StopParameters struct {
 	StreamClass string // The class of the stream to stop.
-	StreamID    string // The unique identifier of the stream to stop.
+	StreamId    string // The unique identifier of the stream to stop.
+	Namespace   string // The unique identifier of the stream to stop.
 }
 
 // NewStopParameters creates a new instance of StopParameters based on the provided command and arguments.
@@ -17,5 +18,5 @@ func NewStopParameters(_ *cobra.Command, args []string) (*StopParameters, error)
 		return nil, fmt.Errorf("invalid arguments for stop parameters")
 	}
 
-	return &StopParameters{StreamClass: args[0], StreamID: args[1]}, nil
+	return &StopParameters{StreamClass: args[0], StreamId: args[1]}, nil
 }

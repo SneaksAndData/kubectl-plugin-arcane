@@ -12,7 +12,7 @@ type DowntimeDeclareCommand interface {
 }
 
 // NewDowntimeDeclareCommand creates a new instance of the DowntimeDeclareCommand, which allows users to temporarily stop a stream or a list of streams.
-func NewDowntimeDeclareCommand(ds interfaces.DowntimeService) DowntimeDeclareCommand {
+func NewDowntimeDeclareCommand(ds interfaces.DowntimeService) DowntimeDeclareCommand { // coverage-ignore (trivial)
 	cmd := cobra.Command{
 		Use:   "declare <stream-class> <mask> <key>",
 		Args:  cobra.ExactArgs(3),

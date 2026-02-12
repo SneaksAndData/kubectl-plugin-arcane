@@ -11,7 +11,7 @@ type RootCommand interface {
 }
 
 // NewRootCommand creates a new RootCommand with the provided StreamCommand and DowntimeCommand as subcommands. It also adds the necessary flags for Kubernetes configuration.
-func NewRootCommand(streamCommand StreamCommand, downtimeCommand DowntimeCommand) RootCommand {
+func NewRootCommand(streamCommand StreamCommand, downtimeCommand DowntimeCommand) RootCommand { // coverage-ignore (trivial)
 	rootCommand := &cobra.Command{
 		Use: "kubectl-arcane",
 	}

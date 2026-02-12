@@ -13,6 +13,7 @@ import (
 	"k8s.io/klog/v2"
 	"os/exec"
 	controllerruntime "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strings"
 	"sync"
 	"testing"
@@ -26,7 +27,7 @@ import (
 )
 
 func Test_Backfill(t *testing.T) {
-	name := createTestStreamDefinition(t, false, "5s")
+	name := createTestStreamDefinition(t, false, "5s", true)
 	require.NotEmpty(t, name)
 
 	clientSet := versionedv1.NewForConfigOrDie(kubeConfig)
@@ -45,7 +46,7 @@ func Test_Backfill(t *testing.T) {
 }
 
 func Test_Backfill_Wait(t *testing.T) {
-	name := createTestStreamDefinition(t, false, "5s")
+	name := createTestStreamDefinition(t, false, "5s", true)
 	require.NotEmpty(t, name)
 
 	clientSet := versionedv1.NewForConfigOrDie(kubeConfig)
@@ -64,7 +65,7 @@ func Test_Backfill_Wait(t *testing.T) {
 }
 
 func Test_Backfill_Cancelled(t *testing.T) {
-	name := createTestStreamDefinition(t, false, "30s")
+	name := createTestStreamDefinition(t, false, "30s", true)
 	require.NotEmpty(t, name)
 
 	clientSet := versionedv1.NewForConfigOrDie(kubeConfig)
@@ -103,6 +104,48 @@ func Test_Backfill_Cancelled(t *testing.T) {
 	require.False(t, bfr.Spec.Completed, "backfill should not be completed when context is cancelled")
 }
 
+func Test_StreamStarted(t *testing.T) {
+	name := createTestStreamDefinition(t, false, "15s", true)
+	require.NotEmpty(t, name)
+
+	streamingClientSet := versionedv1.NewForConfigOrDie(kubeConfig)
+	c, err := client.New(kubeConfig, client.Options{})
+	require.NoError(t, err)
+
+	streamService := NewStreamService(streamingClientSet, c)
+	err = streamService.Start(t.Context(), &models.StartParameters{
+		Namespace:   "default",
+		StreamId:    name,
+		StreamClass: "arcane-stream-mock",
+	})
+	require.NoError(t, err)
+
+	stream, err := clientSet.StreamingV1().TestStreamDefinitions("default").Get(t.Context(), name, metav1.GetOptions{})
+	require.NoError(t, err)
+	require.False(t, stream.Spec.Suspended)
+}
+
+func Test_StreamStopped(t *testing.T) {
+	name := createTestStreamDefinition(t, false, "15s", false)
+	require.NotEmpty(t, name)
+
+	streamingClientSet := versionedv1.NewForConfigOrDie(kubeConfig)
+	c, err := client.New(kubeConfig, client.Options{})
+	require.NoError(t, err)
+
+	streamService := NewStreamService(streamingClientSet, c)
+	err = streamService.Stop(t.Context(), &models.StopParameters{
+		Namespace:   "default",
+		StreamId:    name,
+		StreamClass: "arcane-stream-mock",
+	})
+	require.NoError(t, err)
+
+	stream, err := clientSet.StreamingV1().TestStreamDefinitions("default").Get(t.Context(), name, metav1.GetOptions{})
+	require.NoError(t, err)
+	require.True(t, stream.Spec.Suspended)
+}
+
 var (
 	kubeconfigCmd string
 	kubeConfig    *rest.Config
@@ -139,7 +182,7 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
-func createTestStreamDefinition(t *testing.T, shouldFail bool, runDuration string) string {
+func createTestStreamDefinition(t *testing.T, shouldFail bool, runDuration string, suspended bool) string {
 	testStream := &mockv1.TestStreamDefinition{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "streaming.sneaksanddata.com/v1",
@@ -152,7 +195,7 @@ func createTestStreamDefinition(t *testing.T, shouldFail bool, runDuration strin
 		Spec: mockv1.TestsStreamDefinitionSpec{
 			Source:      "mock-source",
 			Destination: "mock-destination",
-			Suspended:   true,
+			Suspended:   suspended,
 			ShouldFail:  shouldFail,
 			JobTemplateRef: corev1.ObjectReference{
 				APIVersion: "streaming.sneaksanddata.com/v1",

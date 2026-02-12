@@ -121,7 +121,7 @@ func (s *stream) modifyStreamDefinition(ctx context.Context,
 	modifier func(streamapis.Definition) error,
 	needModify func(streamapis.Definition) bool) error {
 
-	sc, err := s.clientSet.StreamingV1().StreamClasses(namespace).Get(ctx, streamClass, metav1.GetOptions{})
+	sc, err := s.clientSet.StreamingV1().StreamClasses("").Get(ctx, streamClass, metav1.GetOptions{})
 	if err != nil {
 		return fmt.Errorf("error fetching stream class: %w", err)
 	}

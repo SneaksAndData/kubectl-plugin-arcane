@@ -21,20 +21,38 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func Test_CreateFailedStream(t *testing.T) {
+func Test_Backfill(t *testing.T) {
 	name := createTestStreamDefinition(t, false)
 	require.NotEmpty(t, name)
 
 	clientSet := versionedv1.NewForConfigOrDie(kubeConfig)
 
 	streamService := NewStreamService(clientSet)
-	err := streamService.Backfill(t.Context(), &models.BackfillParameters{
+	bfr, err := streamService.Backfill(t.Context(), &models.BackfillParameters{
 		Namespace:   "default",
 		StreamId:    name,
 		StreamClass: "arcane-stream-mock",
 		Wait:        false,
 	})
 	require.NoError(t, err)
+	require.False(t, bfr.Spec.Completed)
+}
+
+func Test_Backfill_Wait(t *testing.T) {
+	name := createTestStreamDefinition(t, false)
+	require.NotEmpty(t, name)
+
+	clientSet := versionedv1.NewForConfigOrDie(kubeConfig)
+
+	streamService := NewStreamService(clientSet)
+	bfr, err := streamService.Backfill(t.Context(), &models.BackfillParameters{
+		Namespace:   "default",
+		StreamId:    name,
+		StreamClass: "arcane-stream-mock",
+		Wait:        true,
+	})
+	require.NoError(t, err)
+	require.True(t, bfr.Spec.Completed)
 }
 
 var (
@@ -86,7 +104,7 @@ func createTestStreamDefinition(t *testing.T, shouldFail bool) string {
 		Spec: mockv1.TestsStreamDefinitionSpec{
 			Source:      "mock-source",
 			Destination: "mock-destination",
-			Suspended:   false,
+			Suspended:   true,
 			ShouldFail:  shouldFail,
 			JobTemplateRef: corev1.ObjectReference{
 				APIVersion: "streaming.sneaksanddata.com/v1",
@@ -100,7 +118,7 @@ func createTestStreamDefinition(t *testing.T, shouldFail bool) string {
 				Name:       "arcane-stream-mock",
 				Namespace:  "default",
 			},
-			RunDuration: "15s",
+			RunDuration: "5s",
 			TestSecretRef: &corev1.LocalObjectReference{
 				Name: "test-secret",
 			},

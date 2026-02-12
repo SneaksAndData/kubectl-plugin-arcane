@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"context"
+	"github.com/SneaksAndData/arcane-operator/pkg/apis/streaming/v1"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/models"
 )
 
@@ -15,5 +16,5 @@ type StreamService interface {
 	Stop(ctx context.Context, parameters *models.StopParameters) error
 
 	// Backfill performs a backfill operation for a stream based on the provided command and arguments.
-	Backfill(ctx context.Context, parameters *models.BackfillParameters) error
+	Backfill(ctx context.Context, parameters *models.BackfillParameters) (*v1.BackfillRequest, error)
 }

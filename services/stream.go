@@ -19,7 +19,7 @@ const fieldManager = "kubectl-arcane"
 // Ensure stream implements interfaces.StreamService
 var _ interfaces.StreamService = (*stream)(nil)
 
-// stream is a streamService that provides stream operations.
+// stream is a service that provides stream operations.
 type stream struct {
 	clientSet          *versioned.Clientset
 	unstructuredClient client.Client

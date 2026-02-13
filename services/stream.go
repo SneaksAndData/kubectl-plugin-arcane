@@ -9,9 +9,12 @@ import (
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/interfaces"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/models"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"time"
 )
 
 const fieldManager = "kubectl-arcane"
@@ -83,34 +86,46 @@ func (s *stream) Backfill(ctx context.Context, parameters *models.BackfillParame
 
 // Start is a method that allows users to start a stream, use the <key> parameter to identify the stream to start
 func (s *stream) Start(ctx context.Context, parameters *models.StartParameters) error {
-	return s.modifyStreamDefinition(ctx,
-		parameters.Namespace,
-		parameters.StreamClass,
-		parameters.StreamId,
-		streamapis.Running,
-		func(def streamapis.Definition) error {
-			return def.SetSuspended(false)
-		},
-		func(definition streamapis.Definition) bool {
-			return definition.Suspended()
-		},
-	)
+	return wait.PollUntilContextCancel(ctx, 1*time.Second, true, func(ctx context.Context) (done bool, err error) {
+		err = s.modifyStreamDefinition(ctx,
+			parameters.Namespace,
+			parameters.StreamClass,
+			parameters.StreamId,
+			streamapis.Running,
+			func(def streamapis.Definition) error {
+				return def.SetSuspended(false)
+			},
+			func(definition streamapis.Definition) bool {
+				return definition.Suspended()
+			},
+		)
+		if err == nil || apierrors.IsConflict(err) {
+			return true, nil
+		}
+		return false, err
+	})
 }
 
 // Stop is a method that allows users to stop a stream, use the <key> parameter to identify the stream to stop
 func (s *stream) Stop(ctx context.Context, parameters *models.StopParameters) error {
-	return s.modifyStreamDefinition(ctx,
-		parameters.Namespace,
-		parameters.StreamClass,
-		parameters.StreamId,
-		streamapis.Suspended,
-		func(def streamapis.Definition) error {
-			return def.SetSuspended(true)
-		},
-		func(definition streamapis.Definition) bool {
-			return !definition.Suspended()
-		},
-	)
+	return wait.PollUntilContextCancel(ctx, 1*time.Second, true, func(ctx context.Context) (done bool, err error) {
+		err = s.modifyStreamDefinition(ctx,
+			parameters.Namespace,
+			parameters.StreamClass,
+			parameters.StreamId,
+			streamapis.Suspended,
+			func(def streamapis.Definition) error {
+				return def.SetSuspended(true)
+			},
+			func(definition streamapis.Definition) bool {
+				return !definition.Suspended()
+			},
+		)
+		if err == nil || apierrors.IsConflict(err) {
+			return true, nil
+		}
+		return false, err
+	})
 }
 
 func (s *stream) modifyStreamDefinition(ctx context.Context,

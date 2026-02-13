@@ -3,6 +3,7 @@ package commands
 import (
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/interfaces"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/internal"
+	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/models"
 	"github.com/spf13/cobra"
 )
 
@@ -17,7 +18,13 @@ func NewDowntimeStopCommand(ds interfaces.DowntimeService) DowntimeStopCommand {
 		Use:   "stop <key>",
 		Args:  cobra.ExactArgs(1),
 		Short: "Stop downtime for a stream or a list of streams, use the <key> parameter to identify the stream(s) to resume",
-		RunE:  ds.StopDowntime,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			parameters, err := models.NewDowntimeStopParameters(cmd, args)
+			if err != nil {
+				return err
+			}
+			return ds.StopDowntime(cmd.Context(), parameters)
+		},
 	}
 	return internal.NewGenericCommand(&cmd)
 }

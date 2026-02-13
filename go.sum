@@ -10,10 +10,10 @@ github.com/Masterminds/semver/v3 v3.4.0 h1:Zog+i5UMtVoCU8oKka5P7i9q9HgrJeGzI9SA1
 github.com/Masterminds/semver/v3 v3.4.0/go.mod h1:4V+yj/TJE1HU9XfppCwVMZq3I84lprf4nC11bSS5beM=
 github.com/Microsoft/go-winio v0.5.0 h1:Elr9Wn+sGKPlkaBvwu4mTrxtmOp3F3yV9qhaHbXGjwU=
 github.com/Microsoft/go-winio v0.5.0/go.mod h1:JPGBdM1cNvN/6ISo+n8V5iA4v8pBzdOpzfwIujj1a84=
-github.com/SneaksAndData/arcane-operator v1.0.6 h1:Tgs7PhWGmPl7YEnZpvAK4p+9ywlTVcRvW/POXvbpA2s=
-github.com/SneaksAndData/arcane-operator v1.0.6/go.mod h1:b5EAnu+yD22oAYdBf9iKlxs5PTGV8A89A43M/UtEnyM=
-github.com/SneaksAndData/arcane-operator v1.0.8-0.20260212130300-eb714604b99d h1:YllMLvrbf7EIue/go9kZpIhz094s4QU3apI7QW7xddo=
-github.com/SneaksAndData/arcane-operator v1.0.8-0.20260212130300-eb714604b99d/go.mod h1:b5EAnu+yD22oAYdBf9iKlxs5PTGV8A89A43M/UtEnyM=
+github.com/SneaksAndData/arcane-operator v1.0.7 h1:arpIl1Xl+Gx55+kezqtNWJzXBIVG6PktZ+7Vg3RTixw=
+github.com/SneaksAndData/arcane-operator v1.0.7/go.mod h1:b5EAnu+yD22oAYdBf9iKlxs5PTGV8A89A43M/UtEnyM=
+github.com/SneaksAndData/arcane-operator v1.0.9-0.20260212150919-9b2d2f7582e6 h1:mOZFZJxwhSoPeD4MIqPCpI92H/LDeFzRGivFKsIsZRE=
+github.com/SneaksAndData/arcane-operator v1.0.9-0.20260212150919-9b2d2f7582e6/go.mod h1:b5EAnu+yD22oAYdBf9iKlxs5PTGV8A89A43M/UtEnyM=
 github.com/SneaksAndData/arcane-stream-mock v1.0.5 h1:TReT4U/6MJMr7jn28FQGPmCQPIu4cI0sOBjbTQSp/7Q=
 github.com/SneaksAndData/arcane-stream-mock v1.0.5/go.mod h1:1bhteY08cwwk63Elee0NCNDpylQUrzVkJXyEslhpW6M=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=

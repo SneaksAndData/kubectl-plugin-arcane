@@ -19,7 +19,7 @@ func Test_Backfill(t *testing.T) {
 
 	clientSet := versionedv1.NewForConfigOrDie(kubeConfig)
 
-	streamService := NewStreamService(clientSet, nil)
+	streamService := NewStreamService(NewFakeClientProvider(clientSet, nil))
 	err := streamService.Backfill(t.Context(), &models.BackfillParameters{
 		Namespace:   "default",
 		StreamId:    name,
@@ -38,7 +38,7 @@ func Test_Backfill_Wait(t *testing.T) {
 
 	clientSet := versionedv1.NewForConfigOrDie(kubeConfig)
 
-	streamService := NewStreamService(clientSet, nil)
+	streamService := NewStreamService(NewFakeClientProvider(clientSet, nil))
 	err := streamService.Backfill(t.Context(), &models.BackfillParameters{
 		Namespace:   "default",
 		StreamId:    name,
@@ -61,7 +61,7 @@ func Test_Backfill_Cancelled(t *testing.T) {
 	ctx, cancel := context.WithCancel(t.Context())
 	defer cancel() // Ensure context is cleaned up even if test fails
 
-	streamService := NewStreamService(clientSet, nil)
+	streamService := NewStreamService(NewFakeClientProvider(clientSet, nil))
 	var err error
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -99,7 +99,7 @@ func Test_StreamStarted(t *testing.T) {
 	c, err := client.New(kubeConfig, client.Options{})
 	require.NoError(t, err)
 
-	streamService := NewStreamService(streamingClientSet, c)
+	streamService := NewStreamService(NewFakeClientProvider(streamingClientSet, c))
 	err = streamService.Start(t.Context(), &models.StartParameters{
 		Namespace:   "default",
 		StreamId:    name,
@@ -120,7 +120,7 @@ func Test_StreamStopped(t *testing.T) {
 	c, err := client.New(kubeConfig, client.Options{})
 	require.NoError(t, err)
 
-	streamService := NewStreamService(streamingClientSet, c)
+	streamService := NewStreamService(NewFakeClientProvider(streamingClientSet, c))
 	err = streamService.Stop(t.Context(), &models.StopParameters{
 		Namespace:   "default",
 		StreamId:    name,

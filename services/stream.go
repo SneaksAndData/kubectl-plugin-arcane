@@ -42,7 +42,6 @@ func (s *stream) Backfill(ctx context.Context, parameters *models.BackfillParame
 		StreamingV1().
 		BackfillRequests(parameters.Namespace).
 		Create(ctx, parameters.ToBackfillRequest(), metav1.CreateOptions{
-			DryRun:          parameters.DryRun,
 			FieldManager:    fieldManager,
 			FieldValidation: "Strict",
 		})

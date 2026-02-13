@@ -14,7 +14,7 @@ type StreamCommand interface {
 func NewStreamCommand(start StreamStart, stop StreamStop, backfill StreamBackfill) StreamCommand { // coverage-ignore (trivial)
 	cmd := cobra.Command{
 		Use:   "stream",
-		Short: "Allows users to start, stop or backfill a stream",
+		Short: "Interact with individual streams, including starting, stopping and backfilling",
 	}
 	cmd.AddCommand(start.GetCommand())
 	cmd.AddCommand(stop.GetCommand())

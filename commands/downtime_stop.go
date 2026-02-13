@@ -15,8 +15,8 @@ type DowntimeStopCommand interface {
 // NewDowntimeStopCommand creates a new instance of the DowntimeStopCommand, which allows users to stop downtime for a stream or a list of streams.
 func NewDowntimeStopCommand(ds interfaces.DowntimeService) DowntimeStopCommand { // coverage-ignore (trivial)
 	cmd := cobra.Command{
-		Use:   "stop <key>",
-		Args:  cobra.ExactArgs(1),
+		Use:   "stop <stream-class> <key>",
+		Args:  cobra.ExactArgs(2),
 		Short: "Stop downtime for a stream or a list of streams, use the <key> parameter to identify the stream(s) to resume",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			parameters, err := models.NewDowntimeStopParameters(cmd, args)

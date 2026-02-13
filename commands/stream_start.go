@@ -5,6 +5,7 @@ import (
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/internal"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/models"
 	"github.com/spf13/cobra"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
 // StreamStart is a command that runs a stream start operation.
@@ -13,13 +14,13 @@ type StreamStart interface {
 }
 
 // NewStreamStart creates a new instance of the StreamStart command, which runs a stream start operation.
-func NewStreamStart(streamService interfaces.StreamService) StreamStart { // coverage-ignore (trivial)
+func NewStreamStart(streamService interfaces.StreamService, configFlags *genericclioptions.ConfigFlags) StreamStart { // coverage-ignore (trivial)
 	cmd := cobra.Command{
-		Use:   "stream <stream-class> <stream-id>",
+		Use:   "start <stream-class> <stream-id>",
 		Args:  cobra.ExactArgs(2),
-		Short: "Run a stream command",
+		Short: "Start a stream",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			startParameters, err := models.NewStartParameters(cmd, args)
+			startParameters, err := models.NewStartParameters(cmd, args, configFlags)
 			if err != nil {
 				return err
 			}

@@ -1,8 +1,8 @@
 package models
 
 import (
-	"fmt"
 	"github.com/spf13/cobra"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
 // StopParameters represents the parameters required to perform a stop operation for a stream.
@@ -13,10 +13,11 @@ type StopParameters struct {
 }
 
 // NewStopParameters creates a new instance of StopParameters based on the provided command and arguments.
-func NewStopParameters(_ *cobra.Command, args []string) (*StopParameters, error) {
-	if len(args) != 2 {
-		return nil, fmt.Errorf("invalid arguments for stop parameters")
+func NewStopParameters(_ *cobra.Command, args []string, configFlags *genericclioptions.ConfigFlags) (*StopParameters, error) {
+	namespace, _, err := configFlags.ToRawKubeConfigLoader().Namespace()
+	if err != nil {
+		return nil, err
 	}
 
-	return &StopParameters{StreamClass: args[0], StreamId: args[1]}, nil
+	return &StopParameters{StreamClass: args[0], StreamId: args[1], Namespace: namespace}, nil
 }

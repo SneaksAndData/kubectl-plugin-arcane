@@ -24,6 +24,9 @@ type Queue = workqueue.TypedRateLimitingInterface[*unstructured.Unstructured]
 // UnstructuredProcessor is a function that processes an unstructured object and returns an updated unstructured object or an error.
 type UnstructuredProcessor func(item *unstructured.Unstructured) (*unstructured.Unstructured, error)
 
+// UnstructuredObjectFilter is a function that filters unstructured objects based on custom criteria.
+type UnstructuredObjectFilter func(item *unstructured.Unstructured) bool
+
 // downtime is a service that provides downtime operations.
 type downtime struct {
 	clientSet          *versioned.Clientset
@@ -40,12 +43,12 @@ func NewDowntimeService(clientSet *versioned.Clientset, unstructuredClient clien
 
 // DeclareDowntime is a method that allows users to declare downtime for a stream or a list of streams, use the <key> parameter to identify the stream(s) to pause
 func (s *downtime) DeclareDowntime(ctx context.Context, parameters *models.DowntimeDeclareParameters) error {
-	return s.runWithQueue(ctx, parameters.StreamClass, parameters.Namespace, parameters.Prefix, setDowntimeForStream(parameters.DowntimeKey))
+	return s.runWithQueue(ctx, parameters.StreamClass, filterByNamePrefix(parameters.Prefix), setDowntimeForStream(parameters.DowntimeKey))
 }
 
 // StopDowntime is a method that allows users to stop downtime for a stream or a list of streams, use the <key> parameter to identify the stream(s) to resume
 func (s *downtime) StopDowntime(ctx context.Context, parameters *models.DowntimeStopParameters) error {
-	return s.runWithQueue(ctx, parameters.StreamClass, parameters.Namespace, parameters.Prefix, unsetDowntimeForStream(parameters.DowntimeKey))
+	return s.runWithQueue(ctx, parameters.StreamClass, filterByDowntimeKey(parameters.DowntimeKey), unsetDowntimeForStream(parameters.DowntimeKey))
 }
 
 func setDowntimeForStream(key string) UnstructuredProcessor {
@@ -102,7 +105,7 @@ func unsetDowntimeForStream(key string) UnstructuredProcessor {
 	}
 }
 
-func (s *downtime) runWithQueue(ctx context.Context, streamClass string, namespace string, prefix string, process UnstructuredProcessor) error {
+func (s *downtime) runWithQueue(ctx context.Context, streamClass string, filter UnstructuredObjectFilter, process UnstructuredProcessor) error {
 	rateLimiter := workqueue.DefaultTypedControllerRateLimiter[*unstructured.Unstructured]()
 	queue := workqueue.NewTypedRateLimitingQueue[*unstructured.Unstructured](rateLimiter)
 	defer queue.ShutDown()
@@ -112,7 +115,7 @@ func (s *downtime) runWithQueue(ctx context.Context, streamClass string, namespa
 		s.processObjects(ctx, queue, process)
 	})
 
-	err := s.getObjectsList(ctx, streamClass, namespace, prefix, queue)
+	err := s.getObjectsList(ctx, streamClass, filter, queue)
 	if err != nil {
 		return err
 	}
@@ -122,7 +125,7 @@ func (s *downtime) runWithQueue(ctx context.Context, streamClass string, namespa
 	return nil
 }
 
-func (s *downtime) getObjectsList(ctx context.Context, streamClass string, namespace string, prefix string, queue Queue) error {
+func (s *downtime) getObjectsList(ctx context.Context, streamClass string, matches UnstructuredObjectFilter, queue Queue) error {
 	sc, err := s.clientSet.StreamingV1().StreamClasses("").Get(ctx, streamClass, metav1.GetOptions{})
 	if err != nil {
 		return err
@@ -137,19 +140,31 @@ func (s *downtime) getObjectsList(ctx context.Context, streamClass string, names
 		Kind:    gvk.Kind + "List",
 	})
 
-	err = s.unstructuredClient.List(ctx, streamList, client.InNamespace(namespace))
+	err = s.unstructuredClient.List(ctx, streamList)
 	if err != nil {
 		return err
 	}
 
 	for _, item := range streamList.Items {
-		if !strings.HasPrefix(item.GetName(), prefix) {
+		if !matches(&item) {
 			continue
 		}
 		queue.Add(&item)
 	}
 
 	return nil
+}
+
+func filterByNamePrefix(prefix string) func(*unstructured.Unstructured) bool {
+	return func(u *unstructured.Unstructured) bool {
+		return strings.HasPrefix(u.GetName(), prefix)
+	}
+}
+
+func filterByDowntimeKey(key string) func(*unstructured.Unstructured) bool {
+	return func(u *unstructured.Unstructured) bool {
+		return u.GetLabels()["arcane.sneaksanddata.com/downtime"] == key
+	}
 }
 
 func (s *downtime) processObjects(ctx context.Context, queue Queue, process UnstructuredProcessor) {

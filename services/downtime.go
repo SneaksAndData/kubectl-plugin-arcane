@@ -41,12 +41,12 @@ func NewDowntimeService(clientSet *versioned.Clientset, unstructuredClient clien
 }
 
 // DeclareDowntime is a method that allows users to declare downtime for a stream or a list of streams, use the <key> parameter to identify the stream(s) to pause
-func (s *downtime) DeclareDowntime(ctx context.Context, parameters models.DowntimeDeclareParameters) error {
+func (s *downtime) DeclareDowntime(ctx context.Context, parameters *models.DowntimeDeclareParameters) error {
 	return s.runWithQueue(ctx, parameters.StreamClass, parameters.Namespace, parameters.Prefix, setDowntimeForStream(parameters.DowntimeKey))
 }
 
 // StopDowntime is a method that allows users to stop downtime for a stream or a list of streams, use the <key> parameter to identify the stream(s) to resume
-func (s *downtime) StopDowntime(ctx context.Context, parameters models.DowntimeStopParameters) error {
+func (s *downtime) StopDowntime(ctx context.Context, parameters *models.DowntimeStopParameters) error {
 	return s.runWithQueue(ctx, parameters.StreamClass, parameters.Namespace, parameters.Prefix, unsetDowntimeForStream(parameters.DowntimeKey))
 }
 

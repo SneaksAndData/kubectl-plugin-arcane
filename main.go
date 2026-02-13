@@ -9,9 +9,11 @@ import (
 	"github.com/sneaksAndData/kubectl-plugin-arcane/providers"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/services"
 	"go.uber.org/fx"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
 func main() {
+	configFlags := genericclioptions.NewConfigFlags(true)
 	app := fx.New(
 		fx.Provide(commands.NewStreamCommand),
 		fx.Provide(commands.NewDowntimeStopCommand),
@@ -22,17 +24,17 @@ func main() {
 		fx.Provide(commands.NewStreamStop),
 		fx.Provide(commands.NewStreamStart),
 		fx.Provide(commands.NewStreamBackfill),
-		fx.Provide(providers.ProvideConfigFlags),
-		fx.Provide(providers.ProvideRestConfig),
-		fx.Provide(providers.ProvideClientSet),
-		fx.Provide(providers.ProvideUnstructuredClient),
-		fx.NopLogger,
+		fx.Supply(configFlags),
+		//fx.Provide(providers.ProvideUnstructuredClient),
+		//fx.NopLogger,
 		fx.Provide(fx.Annotate(services.NewStreamService, fx.As(new(interfaces.StreamService)))),
+		fx.Supply(&providers.clientProvider{ConfigFlags: configFlags}),
 		fx.Invoke(
 			func(rootCmd commands.RootCommand, shutDowner fx.Shutdowner, lifeCycle fx.Lifecycle) error {
 				err := rootCmd.GetCommand().ExecuteContext(context.TODO())
+				fmt.Println(err)
 				defer func() {
-					shErr := shutDowner.Shutdown()
+					shErr := shutDowner.Shutdown(fx.ExitCode(0))
 					if shErr != nil {
 						err = errors.Join(shErr)
 					}

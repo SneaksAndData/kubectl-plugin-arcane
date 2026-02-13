@@ -5,6 +5,7 @@ import (
 	versionedv1 "github.com/SneaksAndData/arcane-operator/pkg/generated/clientset/versioned"
 	mockv1 "github.com/SneaksAndData/arcane-stream-mock/pkg/apis/streaming/v1"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/models"
+	"github.com/sneaksAndData/kubectl-plugin-arcane/tests/helpers"
 	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -17,7 +18,7 @@ import (
 func TestDowntime_DeclareDowntime(t *testing.T) {
 	pattern := "declare-downtime-test-"
 
-	name := newTestStream(t, func(def *mockv1.TestStreamDefinition) {
+	name := helpers.NewTestStream(t, clientSet, func(def *mockv1.TestStreamDefinition) {
 		def.Spec.RunDuration = "5s"
 		def.Spec.Suspended = true
 		def.Spec.ShouldFail = false
@@ -29,7 +30,7 @@ func TestDowntime_DeclareDowntime(t *testing.T) {
 	c, err := client.New(kubeConfig, client.Options{})
 	require.NoError(t, err)
 
-	downtimeService := NewDowntimeService(streamingClientSet, c)
+	downtimeService := NewDowntimeService(NewFakeClientProvider(streamingClientSet, c))
 
 	err = WakeUp(t, name)
 	require.NoError(t, err)
@@ -50,7 +51,7 @@ func TestDowntime_DeclareDowntime(t *testing.T) {
 func TestDowntime_StopDowntime(t *testing.T) {
 	pattern := "stop-downtime-test-"
 
-	name := newTestStream(t, func(def *mockv1.TestStreamDefinition) {
+	name := helpers.NewTestStream(t, clientSet, func(def *mockv1.TestStreamDefinition) {
 		def.Labels = map[string]string{
 			"arcane.sneaksanddata.com/downtime": "maintenance-window-1",
 		}
@@ -65,7 +66,7 @@ func TestDowntime_StopDowntime(t *testing.T) {
 	c, err := client.New(kubeConfig, client.Options{})
 	require.NoError(t, err)
 
-	downtimeService := NewDowntimeService(streamingClientSet, c)
+	downtimeService := NewDowntimeService(NewFakeClientProvider(streamingClientSet, c))
 
 	err = downtimeService.StopDowntime(t.Context(), &models.DowntimeStopParameters{
 		StreamClass: "arcane-stream-mock",

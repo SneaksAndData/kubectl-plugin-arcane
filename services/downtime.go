@@ -26,7 +26,6 @@ type UnstructuredProcessor func(item *unstructured.Unstructured) (*unstructured.
 
 // downtime is a service that provides downtime operations.
 type downtime struct {
-	streamService      interfaces.StreamService
 	clientSet          *versioned.Clientset
 	unstructuredClient client.Client
 }

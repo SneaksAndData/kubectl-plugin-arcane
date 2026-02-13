@@ -21,7 +21,7 @@ func TestDowntime_DeclareDowntime(t *testing.T) {
 		def.Spec.RunDuration = "5s"
 		def.Spec.Suspended = true
 		def.Spec.ShouldFail = false
-		def.ObjectMeta.GenerateName = pattern
+		def.GenerateName = pattern
 	})
 	require.NotEmpty(t, name)
 
@@ -52,13 +52,13 @@ func TestDowntime_StopDowntime(t *testing.T) {
 	pattern := "stop-downtime-test-"
 
 	name := newTestStream(t, func(def *mockv1.TestStreamDefinition) {
-		def.ObjectMeta.Labels = map[string]string{
+		def.Labels = map[string]string{
 			"arcane.sneaksanddata.com/downtime": "maintenance-window-1",
 		}
 		def.Spec.RunDuration = "5s"
 		def.Spec.Suspended = true
 		def.Spec.ShouldFail = false
-		def.ObjectMeta.GenerateName = pattern
+		def.GenerateName = pattern
 	})
 	require.NotEmpty(t, name)
 

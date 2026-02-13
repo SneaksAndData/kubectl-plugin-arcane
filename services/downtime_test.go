@@ -36,7 +36,6 @@ func TestDowntime_DeclareDowntime(t *testing.T) {
 
 	err = downtimeService.DeclareDowntime(t.Context(), &models.DowntimeDeclareParameters{
 		StreamClass: "arcane-stream-mock",
-		Namespace:   "default",
 		DowntimeKey: "maintenance-window-1",
 		Prefix:      pattern,
 	})
@@ -70,9 +69,7 @@ func TestDowntime_StopDowntime(t *testing.T) {
 
 	err = downtimeService.StopDowntime(t.Context(), &models.DowntimeStopParameters{
 		StreamClass: "arcane-stream-mock",
-		Namespace:   "default",
 		DowntimeKey: "maintenance-window-1",
-		Prefix:      pattern,
 	})
 	require.NoError(t, err)
 

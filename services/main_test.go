@@ -38,11 +38,6 @@ func TestMain(m *testing.M) {
 	logger := klog.Background()
 	controllerruntime.SetLogger(logger)
 
-	if testing.Short() {
-		fmt.Println("Skipping integration tests in short mode")
-		return
-	}
-
 	var err error
 	kubeConfig, err = readKubeconfig()
 	if err != nil {

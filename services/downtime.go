@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"fmt"
 	"github.com/SneaksAndData/arcane-operator/pkg/generated/clientset/versioned"
 	streamapis "github.com/SneaksAndData/arcane-operator/services/controllers/stream"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/interfaces"
@@ -121,7 +120,6 @@ func (s *downtime) runWithQueue(ctx context.Context, streamClass string, namespa
 
 	queue.ShutDownWithDrain()
 	wg.Wait()
-	fmt.Println("returning from stop downtime")
 	return nil
 }
 
@@ -163,10 +161,8 @@ func (s *downtime) processObjects(ctx context.Context, queue Queue, process Unst
 		default:
 			item, shutdown := queue.Get()
 			if shutdown {
-				fmt.Println("shutting down downtime")
 				return
 			}
-			fmt.Println(item.Object["metadata"].(map[string]interface{})["name"], "processed for downtime", shutdown)
 
 			itemCopy := item.DeepCopy()
 			updated, err := process(itemCopy)

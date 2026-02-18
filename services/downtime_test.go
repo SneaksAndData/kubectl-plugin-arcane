@@ -74,6 +74,12 @@ func TestDowntime_StopDowntime(t *testing.T) {
 	})
 	require.NoError(t, err)
 
+	err = wait.PollUntilContextCancel(t.Context(), 1*time.Second, true, func(ctx context.Context) (done bool, err error) {
+		s, err := clientSet.StreamingV1().TestStreamDefinitions("default").Get(t.Context(), name, metav1.GetOptions{})
+		return !s.Spec.Suspended, err
+	})
+	require.NoError(t, err)
+
 	s, err := clientSet.StreamingV1().TestStreamDefinitions("default").Get(t.Context(), name, metav1.GetOptions{})
 	require.NoError(t, err)
 	require.NotContains(t, s.Annotations, "arcane.sneaksanddata.com/downtime")

@@ -99,6 +99,10 @@ func Test_DowntimeStop(t *testing.T) {
 var clientSet *mockversionedv1.Clientset
 
 func TestMain(m *testing.M) {
+	if testing.Short() {
+		fmt.Println("Skipping integration tests in short mode.")
+		os.Exit(0)
+	}
 	// Get current directory
 	currentDir, err := os.Getwd()
 	if err != nil {

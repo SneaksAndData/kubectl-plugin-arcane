@@ -5,7 +5,6 @@ import (
 	streamapis "github.com/SneaksAndData/arcane-operator/services/controllers/stream"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/models"
 	"github.com/stretchr/testify/require"
-	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sync"
 	"testing"
@@ -96,8 +95,6 @@ func Test_Backfill_Cancelled(t *testing.T) {
 func Test_StreamStarted(t *testing.T) {
 	name := createTestStreamDefinition(t, false, "15s", true)
 	require.NotEmpty(t, name)
-	err := waitForPhase(t, name, streamapis.Suspended)
-	require.NoError(t, err)
 
 	err := waitForPhase(t, name, streamapis.Suspended)
 	require.NoError(t, err)
@@ -137,12 +134,6 @@ func Test_StreamStopped(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	err = wait.PollUntilContextCancel(t.Context(), 1*time.Second, true, func(ctx context.Context) (done bool, err error) {
-		s, err := clientSet.StreamingV1().TestStreamDefinitions("default").Get(t.Context(), name, metav1.GetOptions{})
-		return s.Spec.Suspended, err
-	})
-
-	require.NoError(t, err)
 	stream, err := clientSet.StreamingV1().TestStreamDefinitions("default").Get(t.Context(), name, metav1.GetOptions{})
 	require.NoError(t, err)
 	require.True(t, stream.Spec.Suspended)

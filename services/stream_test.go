@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	streamapis "github.com/SneaksAndData/arcane-operator/services/controllers/stream"
+
 	versionedv1 "github.com/SneaksAndData/arcane-operator/pkg/generated/clientset/versioned"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -116,6 +118,13 @@ func Test_StreamStarted(t *testing.T) {
 func Test_StreamStopped(t *testing.T) {
 	name := createTestStreamDefinition(t, false, "15s", false)
 	require.NotEmpty(t, name)
+	err := wait.PollUntilContextCancel(t.Context(), 1*time.Second, true, func(ctx context.Context) (done bool, err error) {
+		s, err := clientSet.StreamingV1().TestStreamDefinitions("default").Get(t.Context(), name, metav1.GetOptions{})
+		if err != nil {
+			return false, err
+		}
+		return s.Status.Phase == string(streamapis.Running), nil
+	})
 
 	streamingClientSet := versionedv1.NewForConfigOrDie(kubeConfig)
 	c, err := client.New(kubeConfig, client.Options{})

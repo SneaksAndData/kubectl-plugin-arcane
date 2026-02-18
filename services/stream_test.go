@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	streamapis "github.com/SneaksAndData/arcane-operator/services/controllers/stream"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/models"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -95,7 +96,7 @@ func Test_Backfill_Cancelled(t *testing.T) {
 func Test_StreamStarted(t *testing.T) {
 	name := createTestStreamDefinition(t, false, "15s", true)
 	require.NotEmpty(t, name)
-	err := waitForRunning(t, name)
+	err := waitForPhase(t, name, streamapis.Suspended)
 	require.NoError(t, err)
 
 	streamingClientSet := versionedv1.NewForConfigOrDie(kubeConfig)
@@ -118,7 +119,7 @@ func Test_StreamStarted(t *testing.T) {
 func Test_StreamStopped(t *testing.T) {
 	name := createTestStreamDefinition(t, false, "15s", false)
 	require.NotEmpty(t, name)
-	err := waitForRunning(t, name)
+	err := waitForPhase(t, name, streamapis.Running)
 	require.NoError(t, err)
 
 	streamingClientSet := versionedv1.NewForConfigOrDie(kubeConfig)

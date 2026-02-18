@@ -149,6 +149,7 @@ func (s *stream) modifyStreamDefinition(ctx context.Context,
 	if err != nil {
 		return fmt.Errorf("error providing unstructured client: %w", err)
 	}
+
 	streamDefinition, err := streamapis.GetStreamForClass(ctx, unstructuredClient, sc, namespacedName)
 	if err != nil {
 		return fmt.Errorf("error fetching stream definition: %w", err)

@@ -10,8 +10,6 @@ import (
 	mockv1 "github.com/SneaksAndData/arcane-stream-mock/pkg/apis/streaming/v1"
 	mockversionedv1 "github.com/SneaksAndData/arcane-stream-mock/pkg/generated/clientset/versioned"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/interfaces"
-	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/interfaces"
-	"github.com/sneaksAndData/kubectl-plugin-arcane/tests/helpers"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/tests/helpers"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -46,9 +44,9 @@ func NewFakeClientProvider(clientSet *versionedv1.Clientset, unstructuredClient 
 }
 
 var (
-	clientSet     *mockversionedv1.Clientset
 	kubeconfigCmd string
 	kubeConfig    *rest.Config
+	clientSet     *mockversionedv1.Clientset
 )
 
 // TestMain initializes the Kubernetes client and creates a suspended StreamDefinition for testing
@@ -70,7 +68,7 @@ func TestMain(m *testing.M) {
 
 	clientSet, err = mockversionedv1.NewForConfig(kubeConfig)
 	if err != nil {
-		panic(fmt.Errorf("error creating kubernetes clientProvider: %w", err))
+		panic(fmt.Errorf("error creating kubernetes clientSet: %w", err))
 	}
 
 	m.Run()

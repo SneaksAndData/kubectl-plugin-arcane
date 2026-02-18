@@ -30,7 +30,7 @@ func TestDowntime_DeclareDowntime(t *testing.T) {
 	c, err := client.New(kubeConfig, client.Options{})
 	require.NoError(t, err)
 
-	downtimeService := NewDowntimeService(streamingClientSet, c)
+	downtimeService := NewDowntimeService(NewFakeClientProvider(streamingClientSet, c))
 
 	err = WakeUp(t, name)
 	require.NoError(t, err)
@@ -66,11 +66,17 @@ func TestDowntime_StopDowntime(t *testing.T) {
 	c, err := client.New(kubeConfig, client.Options{})
 	require.NoError(t, err)
 
-	downtimeService := NewDowntimeService(streamingClientSet, c)
+	downtimeService := NewDowntimeService(NewFakeClientProvider(streamingClientSet, c))
 
 	err = downtimeService.StopDowntime(t.Context(), &models.DowntimeStopParameters{
 		StreamClass: "arcane-stream-mock",
 		DowntimeKey: "maintenance-window-1",
+	})
+	require.NoError(t, err)
+
+	err = wait.PollUntilContextCancel(t.Context(), 1*time.Second, true, func(ctx context.Context) (done bool, err error) {
+		s, err := clientSet.StreamingV1().TestStreamDefinitions("default").Get(t.Context(), name, metav1.GetOptions{})
+		return !s.Spec.Suspended, err
 	})
 	require.NoError(t, err)
 

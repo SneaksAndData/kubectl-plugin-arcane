@@ -125,6 +125,7 @@ func Test_StreamStopped(t *testing.T) {
 		}
 		return s.Status.Phase == string(streamapis.Running), nil
 	})
+	require.NoError(t, err)
 
 	streamingClientSet := versionedv1.NewForConfigOrDie(kubeConfig)
 	c, err := client.New(kubeConfig, client.Options{})

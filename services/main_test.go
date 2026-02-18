@@ -10,6 +10,7 @@ import (
 	mockv1 "github.com/SneaksAndData/arcane-stream-mock/pkg/apis/streaming/v1"
 	mockversionedv1 "github.com/SneaksAndData/arcane-stream-mock/pkg/generated/clientset/versioned"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/interfaces"
+	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/interfaces"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/tests/helpers"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/tests/helpers"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

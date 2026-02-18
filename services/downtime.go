@@ -202,6 +202,7 @@ func (s *downtime) processObjects(ctx context.Context, queue Queue, process Unst
 				queue.Done(item)
 				continue
 			}
+
 			err = unstructuredClient.Update(ctx, updated)
 			if err != nil {
 				queue.AddRateLimited(item)

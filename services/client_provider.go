@@ -11,6 +11,9 @@ import (
 
 var _ interfaces.ClientProvider = (*clientProvider)(nil)
 
+// clientProvider is a struct that implements the ClientProvider interface.
+// It lazily initializes both a typed clientset for the Arcane Operator's custom resources and ensures the client
+// initialization order and caching of the clients.
 type clientProvider struct {
 	ConfigFlags *genericclioptions.ConfigFlags
 

@@ -37,7 +37,7 @@ jobs:
         run: go vet ./...
 
       - name: Build
-        run: go build -v ./... -o ./tests/bin/kubectl-arcane
+        run: go build -v ./...
 
       - name: Lint
         uses: golangci/golangci-lint-action@v9
@@ -69,6 +69,9 @@ jobs:
         # if: steps.coverage.outcome == 'failure'
         shell: bash
         run: echo "coverage check failed" && exit 1
+
+      - name: Build binary for integration tests
+        run: go build -o tests/bin/kubectl-arcane main.go
 
       - name: Run integration tests
         if: false # Disable since tests are not implemented yet

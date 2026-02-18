@@ -99,7 +99,10 @@ func Test_StreamStarted(t *testing.T) {
 	err := waitForPhase(t, name, streamapis.Suspended)
 	require.NoError(t, err)
 
+	err := waitForPhase(t, name, streamapis.Suspended)
+	require.NoError(t, err)
 	streamingClientSet := versionedv1.NewForConfigOrDie(kubeConfig)
+
 	c, err := client.New(kubeConfig, client.Options{})
 	require.NoError(t, err)
 

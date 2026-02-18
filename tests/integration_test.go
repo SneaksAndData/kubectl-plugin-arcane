@@ -124,10 +124,6 @@ func TestMain(m *testing.M) {
 		panic(err)
 	}
 
-	var kubeconfigCmd string
-	flag.StringVar(&kubeconfigCmd, "kubeconfig-cmd", "/opt/homebrew/bin/kind get kubeconfig", "Command to execute that outputs kubeconfig YAML content")
-	flag.Parse()
-
 	kubeconfigContent, err := helpers.GetKubeconfigString(kubeconfigCmd)
 	if err != nil {
 		panic(fmt.Errorf("error reading kubeconfig: %w", err))

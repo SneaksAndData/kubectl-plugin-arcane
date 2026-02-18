@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"github.com/SneaksAndData/arcane-operator/pkg/generated/clientset/versioned"
 	streamapis "github.com/SneaksAndData/arcane-operator/services/controllers/stream"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/interfaces"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/models"
@@ -10,7 +9,6 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/util/workqueue"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strings"
 	"sync"
 )
@@ -29,15 +27,13 @@ type UnstructuredObjectFilter func(item *unstructured.Unstructured) bool
 
 // downtime is a service that provides downtime operations.
 type downtime struct {
-	clientSet          *versioned.Clientset
-	unstructuredClient client.Client
+	clientProvider interfaces.ClientProvider
 }
 
 // NewDowntimeService creates a new instance of the downtime, which provides downtime operations.
-func NewDowntimeService(clientSet *versioned.Clientset, unstructuredClient client.Client) interfaces.DowntimeService {
+func NewDowntimeService(clientProvider interfaces.ClientProvider) interfaces.DowntimeService {
 	return &downtime{
-		clientSet:          clientSet,
-		unstructuredClient: unstructuredClient,
+		clientProvider: clientProvider,
 	}
 }
 
@@ -126,7 +122,11 @@ func (s *downtime) runWithQueue(ctx context.Context, streamClass string, filter 
 }
 
 func (s *downtime) getObjectsList(ctx context.Context, streamClass string, matches UnstructuredObjectFilter, queue Queue) error {
-	sc, err := s.clientSet.StreamingV1().StreamClasses("").Get(ctx, streamClass, metav1.GetOptions{})
+	clientSet, err := s.clientProvider.ProvideClientSet()
+	if err != nil {
+		return err
+	}
+	sc, err := clientSet.StreamingV1().StreamClasses("").Get(ctx, streamClass, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
@@ -140,7 +140,11 @@ func (s *downtime) getObjectsList(ctx context.Context, streamClass string, match
 		Kind:    gvk.Kind + "List",
 	})
 
-	err = s.unstructuredClient.List(ctx, streamList)
+	unstructuredClient, err := s.clientProvider.ProvideUnstructuredClient()
+	if err != nil {
+		return err
+	}
+	err = unstructuredClient.List(ctx, streamList)
 	if err != nil {
 		return err
 	}
@@ -191,7 +195,15 @@ func (s *downtime) processObjects(ctx context.Context, queue Queue, process Unst
 				continue
 			}
 
-			err = s.unstructuredClient.Update(ctx, updated)
+			unstructuredClient, err := s.clientProvider.ProvideUnstructuredClient()
+			if err != nil {
+				// If we can't get a client, there's no point in retrying, so we forget the item and move on.
+				queue.Forget(item)
+				queue.Done(item)
+				continue
+			}
+
+			err = unstructuredClient.Update(ctx, updated)
 			if err != nil {
 				queue.AddRateLimited(item)
 				continue

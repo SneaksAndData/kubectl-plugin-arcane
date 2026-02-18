@@ -1,5 +1,5 @@
 // Package providers package that contains function that provides necessary 3rd party dependencies for DI
-package providers
+package services
 
 import (
 	"sync"

@@ -99,6 +99,8 @@ func Test_DowntimeStop(t *testing.T) {
 var clientSet *mockversionedv1.Clientset
 
 func TestMain(m *testing.M) {
+	flag.Parse()
+
 	if testing.Short() {
 		fmt.Println("Skipping integration tests in short mode.")
 		os.Exit(0)

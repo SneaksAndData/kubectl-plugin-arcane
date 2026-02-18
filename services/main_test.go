@@ -2,23 +2,21 @@ package services
 
 import (
 	"context"
-	"errors"
 	"flag"
 	"fmt"
 	v1 "github.com/SneaksAndData/arcane-operator/pkg/apis/streaming/v1"
 	versionedv1 "github.com/SneaksAndData/arcane-operator/pkg/generated/clientset/versioned"
+	streamapis "github.com/SneaksAndData/arcane-operator/services/controllers/stream"
 	mockv1 "github.com/SneaksAndData/arcane-stream-mock/pkg/apis/streaming/v1"
 	mockversionedv1 "github.com/SneaksAndData/arcane-stream-mock/pkg/generated/clientset/versioned"
-	"github.com/stretchr/testify/require"
-	corev1 "k8s.io/api/core/v1"
+	"github.com/sneaksAndData/kubectl-plugin-arcane/tests/helpers"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/klog/v2"
-	"os/exec"
 	controllerruntime "sigs.k8s.io/controller-runtime"
-	"strings"
 	"testing"
+	"time"
 )
 
 var (
@@ -39,7 +37,7 @@ func TestMain(m *testing.M) {
 	controllerruntime.SetLogger(logger)
 
 	var err error
-	kubeConfig, err = readKubeconfig()
+	kubeConfig, err = helpers.ReadKubeconfig(kubeconfigCmd)
 	if err != nil {
 		panic(fmt.Errorf("error reading kubeconfig: %w", err))
 	}
@@ -53,88 +51,11 @@ func TestMain(m *testing.M) {
 }
 
 func createTestStreamDefinition(t *testing.T, shouldFail bool, runDuration string, suspended bool) string {
-	return newTestStream(t, func(def *mockv1.TestStreamDefinition) {
+	return helpers.NewTestStream(t, clientSet, func(def *mockv1.TestStreamDefinition) {
 		def.Spec.ShouldFail = shouldFail
 		def.Spec.RunDuration = runDuration
 		def.Spec.Suspended = suspended
 	})
-}
-
-func newTestStream(t *testing.T, configure func(*mockv1.TestStreamDefinition)) string {
-	testStream := mockv1.TestStreamDefinition{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "streaming.sneaksanddata.com/v1",
-			Kind:       "TestStreamDefinition",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: "test-stream-",
-			Namespace:    "default",
-		},
-		Spec: mockv1.TestsStreamDefinitionSpec{
-			Source:      "mock-source",
-			Destination: "mock-destination",
-			Suspended:   true,
-			ShouldFail:  false,
-			JobTemplateRef: corev1.ObjectReference{
-				APIVersion: "streaming.sneaksanddata.com/v1",
-				Kind:       "StreamingJobTemplate",
-				Name:       "arcane-stream-mock",
-				Namespace:  "default",
-			},
-			BackfillJobTemplateRef: corev1.ObjectReference{
-				APIVersion: "streaming.sneaksanddata.com/v1",
-				Kind:       "StreamingJobTemplate",
-				Name:       "arcane-stream-mock",
-				Namespace:  "default",
-			},
-			RunDuration: "5s",
-			TestSecretRef: &corev1.LocalObjectReference{
-				Name: "test-secret",
-			},
-		},
-	}
-
-	configure(&testStream)
-
-	stream, err := clientSet.
-		StreamingV1().
-		TestStreamDefinitions(testStream.Namespace).
-		Create(t.Context(), &testStream, metav1.CreateOptions{})
-	require.NoError(t, err)
-
-	return stream.Name
-}
-
-func readKubeconfig() (*rest.Config, error) {
-
-	// Parse and execute the command
-	cmdParts := strings.Fields(kubeconfigCmd)
-	if len(cmdParts) == 0 {
-		return nil, errors.New("kubeconfig-cmd cannot be empty")
-	}
-
-	cmd := exec.Command(cmdParts[0], cmdParts[1:]...)
-	output, err := cmd.Output()
-	if err != nil {
-		var exitErr *exec.ExitError
-		if errors.As(err, &exitErr) {
-			return nil, fmt.Errorf("error executing command: %w\nStderr: %s", err, string(exitErr.Stderr))
-		}
-		return nil, fmt.Errorf("error executing command: %w", err)
-	}
-
-	// Load the kubeconfig from bytes and convert to rest.Config
-	clientConfig, err := clientcmd.NewClientConfigFromBytes(output)
-	if err != nil {
-		return nil, fmt.Errorf("error loading kubeconfig: %w", err)
-	}
-
-	restConfig, err := clientConfig.ClientConfig()
-	if err != nil {
-		return nil, fmt.Errorf("error converting to rest.Config: %w", err)
-	}
-
-	return restConfig, nil
 }
 
 func findBackfillRequestByName(ctx context.Context, namespace string, name string) (*v1.BackfillRequest, error) {
@@ -149,4 +70,14 @@ func findBackfillRequestByName(ctx context.Context, namespace string, name strin
 		}
 	}
 	return nil, fmt.Errorf("backfill request for stream %s not found in namespace %s", name, namespace)
+}
+
+func waitForPhase(t *testing.T, name string, phase streamapis.Phase) error {
+	return wait.PollUntilContextCancel(t.Context(), 1*time.Second, true, func(ctx context.Context) (done bool, err error) {
+		s, err := clientSet.StreamingV1().TestStreamDefinitions("default").Get(t.Context(), name, metav1.GetOptions{})
+		if err != nil {
+			return false, err
+		}
+		return s.Status.Phase == string(phase), nil
+	})
 }

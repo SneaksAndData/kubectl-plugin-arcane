@@ -96,9 +96,13 @@ func Test_DowntimeStop(t *testing.T) {
 	)
 }
 
-var clientSet *mockversionedv1.Clientset
+var (
+	clientSet     *mockversionedv1.Clientset
+	kubeconfigCmd string
+)
 
 func TestMain(m *testing.M) {
+	flag.StringVar(&kubeconfigCmd, "kubeconfig-cmd", "/opt/homebrew/bin/kind get kubeconfig", "Command to execute that outputs kubeconfig YAML content")
 	flag.Parse()
 
 	if testing.Short() {

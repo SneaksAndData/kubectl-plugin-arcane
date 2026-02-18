@@ -74,9 +74,7 @@ jobs:
         run: go build -o tests/bin/kubectl-arcane main.go
 
       - name: Run integration tests
-        run: |
-          export PATH="$(pwd):$PATH"
-          go test -v ./tests/... -count=1 -kubeconfig-cmd "kind get kubeconfig" -timeout 5m
+        run: go test -v ./tests/... -count=1 -kubeconfig-cmd "kind get kubeconfig" -timeout 5m
 
       - name: Get logs from application pods
         if: always()

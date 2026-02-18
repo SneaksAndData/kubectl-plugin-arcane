@@ -9,15 +9,39 @@ import (
 	streamapis "github.com/SneaksAndData/arcane-operator/services/controllers/stream"
 	mockv1 "github.com/SneaksAndData/arcane-stream-mock/pkg/apis/streaming/v1"
 	mockversionedv1 "github.com/SneaksAndData/arcane-stream-mock/pkg/generated/clientset/versioned"
+	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/interfaces"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/tests/helpers"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/rest"
 	"k8s.io/klog/v2"
 	controllerruntime "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"testing"
 	"time"
 )
+
+var _ interfaces.ClientProvider = (*FakeClientProvider)(nil)
+
+type FakeClientProvider struct {
+	clientSet          *versionedv1.Clientset
+	unstructuredClient client.Client
+}
+
+func (f FakeClientProvider) ProvideClientSet() (*versionedv1.Clientset, error) {
+	return f.clientSet, nil
+}
+
+func (f FakeClientProvider) ProvideUnstructuredClient() (client.Client, error) {
+	return f.unstructuredClient, nil
+}
+
+func NewFakeClientProvider(clientSet *versionedv1.Clientset, unstructuredClient client.Client) *FakeClientProvider {
+	return &FakeClientProvider{
+		clientSet:          clientSet,
+		unstructuredClient: unstructuredClient,
+	}
+}
 
 var (
 	kubeconfigCmd string

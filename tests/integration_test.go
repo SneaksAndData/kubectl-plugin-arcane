@@ -136,6 +136,7 @@ func TestMain(m *testing.M) {
 	}
 
 	clientSet, err = mockversionedv1.NewForConfig(kubeConfig)
+	require.NoError(nil, err, "error creating kubernetes clientProvider")
 
 	// Set KUBECONFIG environment variable
 	err = os.Setenv("KUBECONFIG", kubeconfigPath)

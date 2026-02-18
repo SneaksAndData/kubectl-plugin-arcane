@@ -23,7 +23,7 @@ func main() {
 		fx.Provide(commands.NewStreamStop),
 		fx.Provide(commands.NewStreamStart),
 		fx.Provide(commands.NewStreamBackfill),
-		//fx.NopLogger,
+		fx.NopLogger,
 		fx.Provide(services.NewStreamService),
 		fx.Provide(services.NewClientProvider),
 		fx.Invoke(

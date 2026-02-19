@@ -2,13 +2,16 @@ package services
 
 import (
 	"context"
+	"fmt"
 	streamapis "github.com/SneaksAndData/arcane-operator/services/controllers/stream"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/interfaces"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/models"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/cli-runtime/pkg/printers"
 	"k8s.io/client-go/util/workqueue"
+	"os"
 	"strings"
 	"sync"
 )
@@ -17,13 +20,13 @@ import (
 var _ interfaces.DowntimeService = (*downtime)(nil)
 
 // Queue is a typed rate-limiting work queue for unstructured objects.
-type Queue = workqueue.TypedRateLimitingInterface[*unstructured.Unstructured]
+type Queue = workqueue.TypedRateLimitingInterface[streamapis.Definition]
 
 // UnstructuredProcessor is a function that processes an unstructured object and returns an updated unstructured object or an error.
-type UnstructuredProcessor func(item *unstructured.Unstructured) (*unstructured.Unstructured, error)
+type UnstructuredProcessor func(def streamapis.Definition) error
 
 // UnstructuredObjectFilter is a function that filters unstructured objects based on custom criteria.
-type UnstructuredObjectFilter func(item *unstructured.Unstructured) bool
+type UnstructuredObjectFilter func(item streamapis.Definition) bool
 
 // downtime is a service that provides downtime operations.
 type downtime struct {
@@ -39,16 +42,28 @@ func NewDowntimeService(clientProvider interfaces.ClientProvider) interfaces.Dow
 
 // DeclareDowntime is a method that allows users to declare downtime for a stream or a list of streams, use the <key> parameter to identify the stream(s) to pause
 func (s *downtime) DeclareDowntime(ctx context.Context, parameters *models.DowntimeDeclareParameters) error {
-	return s.runWithQueue(ctx, parameters.StreamClass, filterByNamePrefix(parameters.Prefix), setDowntimeForStream(parameters.DowntimeKey))
+	return s.runWithQueue(
+		ctx,
+		parameters.StreamClass,
+		filterByNamePrefix(parameters.Prefix),
+		setDowntimeForStream(parameters.DowntimeKey),
+		Printer("suspended"),
+	)
 }
 
 // StopDowntime is a method that allows users to stop downtime for a stream or a list of streams, use the <key> parameter to identify the stream(s) to resume
 func (s *downtime) StopDowntime(ctx context.Context, parameters *models.DowntimeStopParameters) error {
-	return s.runWithQueue(ctx, parameters.StreamClass, filterByDowntimeKey(parameters.DowntimeKey), unsetDowntimeForStream(parameters.DowntimeKey))
+	return s.runWithQueue(ctx,
+		parameters.StreamClass,
+		filterByDowntimeKey(parameters.DowntimeKey),
+		unsetDowntimeForStream(parameters.DowntimeKey),
+		Printer("started"),
+	)
 }
 
 func setDowntimeForStream(key string) UnstructuredProcessor {
-	return func(item *unstructured.Unstructured) (*unstructured.Unstructured, error) {
+	return func(def streamapis.Definition) error {
+		item := def.ToUnstructured()
 		labels := item.GetLabels()
 
 		if labels == nil {
@@ -57,7 +72,7 @@ func setDowntimeForStream(key string) UnstructuredProcessor {
 
 		// Skip if already has a downtime key that's different
 		if existingKey, exists := labels["arcane.sneaksanddata.com/downtime"]; exists && existingKey != key {
-			return nil, nil
+			return nil
 		}
 
 		labels["arcane.sneaksanddata.com/downtime"] = key
@@ -65,23 +80,24 @@ func setDowntimeForStream(key string) UnstructuredProcessor {
 
 		definition, err := streamapis.FromUnstructured(item)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		err = definition.SetSuspended(true)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
-		return definition.ToUnstructured(), nil
+		return nil
 	}
 }
 
 func unsetDowntimeForStream(key string) UnstructuredProcessor {
-	return func(item *unstructured.Unstructured) (*unstructured.Unstructured, error) {
+	return func(def streamapis.Definition) error {
+		item := def.ToUnstructured()
 		labels := item.GetLabels()
 
 		if labels["arcane.sneaksanddata.com/downtime"] != key {
-			return nil, nil // Skip items that don't match the downtime key
+			return nil // Skip items that don't match the downtime key
 		}
 
 		delete(labels, "arcane.sneaksanddata.com/downtime")
@@ -89,26 +105,26 @@ func unsetDowntimeForStream(key string) UnstructuredProcessor {
 
 		definition, err := streamapis.FromUnstructured(item)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		err = definition.SetSuspended(false)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
-		return definition.ToUnstructured(), nil
+		return nil
 	}
 }
 
-func (s *downtime) runWithQueue(ctx context.Context, streamClass string, filter UnstructuredObjectFilter, process UnstructuredProcessor) error {
-	rateLimiter := workqueue.DefaultTypedControllerRateLimiter[*unstructured.Unstructured]()
-	queue := workqueue.NewTypedRateLimitingQueue[*unstructured.Unstructured](rateLimiter)
+func (s *downtime) runWithQueue(ctx context.Context, streamClass string, filter UnstructuredObjectFilter, process UnstructuredProcessor, printer printers.ResourcePrinter) error {
+	rateLimiter := workqueue.DefaultTypedControllerRateLimiter[streamapis.Definition]()
+	queue := workqueue.NewTypedRateLimitingQueue[streamapis.Definition](rateLimiter)
 	defer queue.ShutDown()
 	var wg sync.WaitGroup
 
 	wg.Go(func() {
-		s.processObjects(ctx, queue, process)
+		s.processObjects(ctx, queue, process, printer)
 	})
 
 	err := s.getObjectsList(ctx, streamClass, filter, queue)
@@ -150,28 +166,33 @@ func (s *downtime) getObjectsList(ctx context.Context, streamClass string, match
 	}
 
 	for _, item := range streamList.Items {
-		if !matches(&item) {
+		streamDefinition, err := streamapis.FromUnstructured(&item)
+		if err != nil {
+			logError(&item, "parsing kubernetes object, skipping", err)
+			continue // Skip items that can't be parsed as stream definitions
+		}
+		if !matches(streamDefinition) {
 			continue
 		}
-		queue.Add(&item)
+		queue.Add(streamDefinition)
 	}
 
 	return nil
 }
 
-func filterByNamePrefix(prefix string) func(*unstructured.Unstructured) bool {
-	return func(u *unstructured.Unstructured) bool {
-		return strings.HasPrefix(u.GetName(), prefix)
+func filterByNamePrefix(prefix string) func(streamapis.Definition) bool {
+	return func(u streamapis.Definition) bool {
+		return strings.HasPrefix(u.ToUnstructured().GetName(), prefix) && !u.Suspended()
 	}
 }
 
-func filterByDowntimeKey(key string) func(*unstructured.Unstructured) bool {
-	return func(u *unstructured.Unstructured) bool {
-		return u.GetLabels()["arcane.sneaksanddata.com/downtime"] == key
+func filterByDowntimeKey(key string) func(streamapis.Definition) bool {
+	return func(u streamapis.Definition) bool {
+		return u.ToUnstructured().GetLabels()["arcane.sneaksanddata.com/downtime"] == key
 	}
 }
 
-func (s *downtime) processObjects(ctx context.Context, queue Queue, process UnstructuredProcessor) {
+func (s *downtime) processObjects(ctx context.Context, queue Queue, process UnstructuredProcessor, printer printers.ResourcePrinter) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -182,36 +203,44 @@ func (s *downtime) processObjects(ctx context.Context, queue Queue, process Unst
 				return
 			}
 
-			itemCopy := item.DeepCopy()
-			updated, err := process(itemCopy)
+			err := process(item)
 			if err != nil {
+				logError(item.ToUnstructured(), "modifying object, will retry later", err)
 				queue.AddRateLimited(item)
-				continue
-			}
-
-			if updated == nil {
-				queue.Forget(item)
-				queue.Done(item)
 				continue
 			}
 
 			unstructuredClient, err := s.clientProvider.ProvideUnstructuredClient()
 			if err != nil {
+				logError(item.ToUnstructured(), "in constructing kubernetes client, will not retry", err)
 				// If we can't get a client, there's no point in retrying, so we forget the item and move on.
 				queue.Forget(item)
 				queue.Done(item)
 				continue
 			}
 
-			err = unstructuredClient.Update(ctx, updated)
+			err = unstructuredClient.Update(ctx, item.ToUnstructured())
 			if err != nil {
+				logError(item.ToUnstructured(), "updating client, will retry later", err)
 				queue.AddRateLimited(item)
 				continue
 			}
 
 			queue.Forget(item)
 			queue.Done(item)
+			err = printer.PrintObj(item.ToUnstructured(), os.Stdout)
+			if err != nil {
+				// If we can't print, we still consider the item processed successfully, so we forget it and move on.
+				continue
+			}
 		}
 	}
+}
 
+func logError(object *unstructured.Unstructured, operation string, cause error) {
+	name := FormatName(object)
+	_, err := fmt.Fprintf(os.Stderr, "%s Failed %s: %v\n", name, operation, cause)
+	if err != nil {
+		panic(err)
+	}
 }

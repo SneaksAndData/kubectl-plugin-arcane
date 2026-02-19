@@ -12,6 +12,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/cli-runtime/pkg/printers"
+	"os"
 	"time"
 )
 
@@ -50,7 +52,12 @@ func (s *stream) Backfill(ctx context.Context, parameters *models.BackfillParame
 	}
 
 	if !parameters.Wait {
-		return nil
+		return Printer("created").PrintObj(bfr, os.Stdout)
+	}
+
+	err = Printer("started").PrintObj(bfr, os.Stdout)
+	if err != nil {
+		return err
 	}
 	watch, err := clientSet.StreamingV1().BackfillRequests(parameters.Namespace).Watch(ctx, metav1.ListOptions{
 		FieldSelector:   "metadata.name=" + bfr.Name,
@@ -74,7 +81,7 @@ func (s *stream) Backfill(ctx context.Context, parameters *models.BackfillParame
 			}
 
 			if bfr.Spec.Completed {
-				return nil
+				return Printer("completed").PrintObj(bfr, os.Stdout)
 			}
 
 		case <-ctx.Done():
@@ -85,6 +92,7 @@ func (s *stream) Backfill(ctx context.Context, parameters *models.BackfillParame
 
 // Start is a method that allows users to start a stream, use the <key> parameter to identify the stream to start
 func (s *stream) Start(ctx context.Context, parameters *models.StartParameters) error {
+	printer := Printer("started")
 	return wait.PollUntilContextCancel(ctx, 1*time.Second, true, func(ctx context.Context) (done bool, err error) {
 		err = s.modifyStreamDefinition(ctx,
 			parameters.Namespace,
@@ -97,6 +105,7 @@ func (s *stream) Start(ctx context.Context, parameters *models.StartParameters) 
 			func(definition streamapis.Definition) bool {
 				return definition.Suspended()
 			},
+			printer,
 		)
 		if err == nil || apierrors.IsConflict(err) {
 			return true, nil
@@ -107,6 +116,7 @@ func (s *stream) Start(ctx context.Context, parameters *models.StartParameters) 
 
 // Stop is a method that allows users to stop a stream, use the <key> parameter to identify the stream to stop
 func (s *stream) Stop(ctx context.Context, parameters *models.StopParameters) error {
+	printer := Printer("stopped")
 	return wait.PollUntilContextCancel(ctx, 1*time.Second, true, func(ctx context.Context) (done bool, err error) {
 		err = s.modifyStreamDefinition(ctx,
 			parameters.Namespace,
@@ -119,6 +129,7 @@ func (s *stream) Stop(ctx context.Context, parameters *models.StopParameters) er
 			func(definition streamapis.Definition) bool {
 				return !definition.Suspended()
 			},
+			printer,
 		)
 		if err == nil || apierrors.IsConflict(err) {
 			return true, nil
@@ -133,7 +144,7 @@ func (s *stream) modifyStreamDefinition(ctx context.Context,
 	streamId string,
 	expectedPhase streamapis.Phase,
 	modifier func(streamapis.Definition) error,
-	needModify func(streamapis.Definition) bool) error {
+	needModify func(streamapis.Definition) bool, printer printers.ResourcePrinter) error {
 
 	clientSet, err := s.clientProvider.ProvideClientSet()
 	if err != nil {
@@ -160,7 +171,6 @@ func (s *stream) modifyStreamDefinition(ctx context.Context,
 	}
 
 	err = modifier(streamDefinition)
-	//err = streamDefinition.SetSuspended(false)
 	if err != nil {
 		return fmt.Errorf("error modifiing stream definition: %w", err)
 	}
@@ -170,5 +180,9 @@ func (s *stream) modifyStreamDefinition(ctx context.Context,
 		return fmt.Errorf("error updating stream definition: %w", err)
 	}
 
+	err = printer.PrintObj(streamDefinition.ToUnstructured(), os.Stdout)
+	if err != nil {
+		return fmt.Errorf("error printing stream definition: %w", err)
+	}
 	return nil
 }

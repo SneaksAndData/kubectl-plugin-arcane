@@ -10,7 +10,7 @@ A kubectl plugin for managing [Arcane](https://github.com/SneaksAndData/arcane-o
 
 ## Installation
 
-### Manual installation
+### Manual
 
 1. **Download the latest release binary:**
 

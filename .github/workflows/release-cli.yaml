@@ -1,4 +1,4 @@
-name: Release snd-cli binary
+name: Release binary to GitHub Releases
 run-name: Publish binary from ${{github.ref_name}} by @${{ github.actor }}
 
 on:

@@ -41,6 +41,12 @@ A kubectl plugin for managing [Arcane](https://github.com/SneaksAndData/arcane-o
    kubectl arcane --help
    ```
 
+5. Unset Quarantine attribute on MacOS if you encounter permission issues:
+
+   ```sh
+   xattr -d com.apple.quarantine ~/.local/bin/kubectl-arcane
+   ```
+
 ## Usage
 
 This plugin adds the `arcane` command to `kubectl` with the following subcommands:

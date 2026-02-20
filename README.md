@@ -10,7 +10,7 @@ A kubectl plugin for managing [Arcane](https://github.com/SneaksAndData/arcane-o
 
 ## Installation
 
-### Kubectl Plugin Manager (krew) with custom index
+### Kubectl Plugin Manager (krew)
 
 --TBD--
 

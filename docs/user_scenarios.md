@@ -17,6 +17,8 @@ To run a stream in backfill mode, you can use the following command:
 kubectl arcane stream backfill <stream-class> <stream-id> [--wait]
 ```
 The `--wait` flag will wait for the backfill command to complete before returning.
+If the `--wait` flag is used and kubectl process is interrupted, it will not affect the backfill process, as backfill 
+process is running in the cluster and is not tied to the kubectl process.
 
 ## I've created a backfill request, but backfill didn't start. What can be the reason?
 Check the namespace of backfill request you created. The namespace of backfill request should match the namespace of

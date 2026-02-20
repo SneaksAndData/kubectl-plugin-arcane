@@ -31,3 +31,6 @@ go.work.sum
 .idea/
 .vscode/
 integration_tests/helm/setup/charts/**
+
+# Ignore test binaries
+/tests/bin/**

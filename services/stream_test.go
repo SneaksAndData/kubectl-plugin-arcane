@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	streamapis "github.com/SneaksAndData/arcane-operator/services/controllers/stream"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/models"
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -19,7 +20,7 @@ func Test_Backfill(t *testing.T) {
 
 	clientSet := versionedv1.NewForConfigOrDie(kubeConfig)
 
-	streamService := NewStreamService(clientSet, nil)
+	streamService := NewStreamService(NewFakeClientProvider(clientSet, nil))
 	err := streamService.Backfill(t.Context(), &models.BackfillParameters{
 		Namespace:   "default",
 		StreamId:    name,
@@ -38,7 +39,7 @@ func Test_Backfill_Wait(t *testing.T) {
 
 	clientSet := versionedv1.NewForConfigOrDie(kubeConfig)
 
-	streamService := NewStreamService(clientSet, nil)
+	streamService := NewStreamService(NewFakeClientProvider(clientSet, nil))
 	err := streamService.Backfill(t.Context(), &models.BackfillParameters{
 		Namespace:   "default",
 		StreamId:    name,
@@ -61,7 +62,7 @@ func Test_Backfill_Cancelled(t *testing.T) {
 	ctx, cancel := context.WithCancel(t.Context())
 	defer cancel() // Ensure context is cleaned up even if test fails
 
-	streamService := NewStreamService(clientSet, nil)
+	streamService := NewStreamService(NewFakeClientProvider(clientSet, nil))
 	var err error
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -95,11 +96,14 @@ func Test_StreamStarted(t *testing.T) {
 	name := createTestStreamDefinition(t, false, "15s", true)
 	require.NotEmpty(t, name)
 
+	err := waitForPhase(t, name, streamapis.Suspended)
+	require.NoError(t, err)
 	streamingClientSet := versionedv1.NewForConfigOrDie(kubeConfig)
+
 	c, err := client.New(kubeConfig, client.Options{})
 	require.NoError(t, err)
 
-	streamService := NewStreamService(streamingClientSet, c)
+	streamService := NewStreamService(NewFakeClientProvider(streamingClientSet, c))
 	err = streamService.Start(t.Context(), &models.StartParameters{
 		Namespace:   "default",
 		StreamId:    name,
@@ -115,12 +119,14 @@ func Test_StreamStarted(t *testing.T) {
 func Test_StreamStopped(t *testing.T) {
 	name := createTestStreamDefinition(t, false, "15s", false)
 	require.NotEmpty(t, name)
+	err := waitForPhase(t, name, streamapis.Running)
+	require.NoError(t, err)
 
 	streamingClientSet := versionedv1.NewForConfigOrDie(kubeConfig)
 	c, err := client.New(kubeConfig, client.Options{})
 	require.NoError(t, err)
 
-	streamService := NewStreamService(streamingClientSet, c)
+	streamService := NewStreamService(NewFakeClientProvider(streamingClientSet, c))
 	err = streamService.Stop(t.Context(), &models.StopParameters{
 		Namespace:   "default",
 		StreamId:    name,

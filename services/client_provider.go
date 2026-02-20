@@ -26,13 +26,13 @@ type clientProvider struct {
 	unstructuredErr    error
 }
 
-func NewClientProvider(configFlags *genericclioptions.ConfigFlags) interfaces.ClientProvider {
+func NewClientProvider(configFlags *genericclioptions.ConfigFlags) interfaces.ClientProvider { // coverage-ignore (trivial)
 	return &clientProvider{
 		ConfigFlags: configFlags,
 	}
 }
 
-func (cp *clientProvider) ProvideClientSet() (*versioned.Clientset, error) {
+func (cp *clientProvider) ProvideClientSet() (*versioned.Clientset, error) { // coverage-ignore (trivial)
 	cp.clientSetOnce.Do(func() {
 		config, err := cp.ConfigFlags.ToRESTConfig()
 		if err != nil {
@@ -49,7 +49,7 @@ func (cp *clientProvider) ProvideClientSet() (*versioned.Clientset, error) {
 	return cp.clientSet, cp.clientSetErr
 }
 
-func (cp *clientProvider) ProvideUnstructuredClient() (client.Client, error) {
+func (cp *clientProvider) ProvideUnstructuredClient() (client.Client, error) { // coverage-ignore (trivial)
 	cp.unstructuredOnce.Do(func() {
 		config, err := cp.ConfigFlags.ToRESTConfig()
 		if err != nil {

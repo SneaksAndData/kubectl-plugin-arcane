@@ -13,7 +13,7 @@ type StartParameters struct {
 }
 
 // NewStartParameters creates a new instance of StopParameters based on the provided command and arguments.
-func NewStartParameters(_ *cobra.Command, args []string, configFlags *genericclioptions.ConfigFlags) (*StartParameters, error) {
+func NewStartParameters(_ *cobra.Command, args []string, configFlags *genericclioptions.ConfigFlags) (*StartParameters, error) { // coverage-ignore (tested in integration tests)
 	namespace, _, err := configFlags.ToRawKubeConfigLoader().Namespace()
 	if err != nil {
 		return nil, err

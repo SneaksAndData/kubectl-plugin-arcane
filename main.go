@@ -8,6 +8,11 @@ import (
 	"github.com/sneaksAndData/kubectl-plugin-arcane/services"
 	"go.uber.org/fx"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+
+	// import authentication plugins for GCP, Azure, and OIDC to ensure that the plugin can
+	// authenticate with Kubernetes clusters using these methods.
+	// see: https://krew.sigs.k8s.io/docs/developer-guide/develop/best-practices/
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
 )
 
 func main() {

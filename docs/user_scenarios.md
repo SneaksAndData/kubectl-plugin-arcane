@@ -29,12 +29,7 @@ To stop a list of streams by name prefix, you can use the following command:
 ```sh
 kubectl arcane downtime declare <stream-class> <prefix> <key>
 ```
-The `<key>` parameter is used to identify the list of streams that are in downtime, and will be used to resume the
-streams when downtime is stopped. You should not use a key that is already in use for another downtime declaration,
-otherwise you might end up resuming the wrong list of streams. If the list of the streams that are in downtime
-intersects with the list of streams that are in another downtime, the command will fail to prevent you from
-resuming the wrong list of streams when you stop the downtime. You should remember the key you used for the
-downtime declaration, as you will need it to stop the downtime.
+The `<key>` parameter is used to identify a list of streams that are in downtime, and should be used to resume those when downtime ends. You should always use a **unique, meaningful** name for the key and **never reuse key names from other downtimes** - ideally, add a hash or guid to your key name. Misuse of the key can lead to resuming streams that are not supposed to be running.
 
 ## I need to resume a list of streams that are in downtime
 To resume a list of streams that are in downtime, you can use the following command:

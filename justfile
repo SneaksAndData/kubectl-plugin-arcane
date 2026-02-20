@@ -35,4 +35,4 @@ mock-stream-plugin:
         --version v1.0.6
 
 manifests:
-    kubectl apply -f integration_tests/manifests/*.yaml
+    kubectl apply -f integration_tests/manifests/

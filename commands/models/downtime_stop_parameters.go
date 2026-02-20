@@ -11,7 +11,7 @@ type DowntimeStopParameters struct {
 }
 
 // NewDowntimeStopParameters creates a new instance of StopParameters based on the provided command and arguments.
-func NewDowntimeStopParameters(_ *cobra.Command, args []string) (*DowntimeStopParameters, error) {
+func NewDowntimeStopParameters(_ *cobra.Command, args []string) (*DowntimeStopParameters, error) { // coverage-ignore (tested in integration tests)
 	return &DowntimeStopParameters{
 		StreamClass: args[0],
 		DowntimeKey: args[1],

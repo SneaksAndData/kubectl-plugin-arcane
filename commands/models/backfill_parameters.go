@@ -17,7 +17,7 @@ type BackfillParameters struct {
 }
 
 // NewBackfillParameters creates a new instance of BackfillParameters based on the provided command and arguments.
-func NewBackfillParameters(cmd *cobra.Command, args []string, configFlags *genericclioptions.ConfigFlags) (*BackfillParameters, error) {
+func NewBackfillParameters(cmd *cobra.Command, args []string, configFlags *genericclioptions.ConfigFlags) (*BackfillParameters, error) { // coverage-ignore (tested in integration tests)
 
 	wait, err := cmd.Flags().GetBool("wait")
 	if err != nil {

@@ -10,6 +10,14 @@ A kubectl plugin for managing [Arcane](https://github.com/SneaksAndData/arcane-o
 
 ## Installation
 
+### Kubectl Plugin Manager (krew)
+
+--TBD--
+
+### Kubectl Plugin Manager (krew) with custom index (pre-release versions)
+
+--TBD--
+
 ### Manual
 
 1. **Download the latest release binary:**
@@ -34,6 +42,9 @@ A kubectl plugin for managing [Arcane](https://github.com/SneaksAndData/arcane-o
    ```sh
    source ~/.zshrc  # or source ~/.bashrc
    ```
+>[!NOTE]
+> The binary is named `kubectl-arcane` to be recognized as a kubectl plugin.
+> After installation, you can use it with the `kubectl arcane` command.
 
 4. **Verify installation:**
 
@@ -41,7 +52,7 @@ A kubectl plugin for managing [Arcane](https://github.com/SneaksAndData/arcane-o
    kubectl arcane --help
    ```
 
-5. Unset Quarantine attribute on MacOS if you encounter permission issues:
+5. **Unset Quarantine attribute on MacOS if you encounter permission issues:**
 
    ```sh
    xattr -d com.apple.quarantine ~/.local/bin/kubectl-arcane
@@ -54,19 +65,23 @@ This plugin adds the `arcane` command to `kubectl` with the following subcommand
 ### Stream Commands
 
 - `kubectl arcane stream start <stream-class> <stream-id>`
-  - Start a stream
+Start a stream
+ 
 - `kubectl arcane stream stop <stream-class> <stream-id>`
-  - Stop a stream
+Stop a stream
+ 
 - `kubectl arcane stream backfill <stream-class> <stream-id> [--wait]`
-  - Run a stream in backfill mode
-  - `--wait`: Wait for backfill command to complete
+Run a stream in backfill mode
+- `--wait`: Wait for backfill command to complete
 
 ### Downtime Commands
 
-- `kubectl arcane downtime declare <stream-class> <mask> <key>`
-  - Begin downtime for a stream or a list of streams, use the `<key>` parameter to resume the stream(s) later
+- `kubectl arcane downtime declare <stream-class> <prefix> <key>`
+Stop the list of streams streams by the name prefix. The `<key>` parameter is used to identify the list of streams
+that are in downtime, and will be used to resume the streams when downtime is stopped.
+
 - `kubectl arcane downtime stop <stream-class> <key>`
-  - Stop downtime for a stream or a list of streams, use the `<key>` parameter to identify the stream(s) to resume
+Stop the downtime by waking up the list of streams that are in downtime by the `<key>` parameter.
 
 ## Help
 

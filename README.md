@@ -11,6 +11,9 @@ A kubectl plugin for managing [Arcane](https://github.com/SneaksAndData/arcane-o
 ## Installation
 
 ### Kubectl Plugin Manager (krew)
+--TBD--
+
+### Kubectl Plugin Manager (krew) with custom index (pre-release versions)
 
 1. Add the custom index for pre-release versions:
 Assuming that the name of the custom index is `beta`:
@@ -28,9 +31,6 @@ kubectl krew install beta/arcane
 > [!NOTE]
 > You can use any name for the custom index instead of `beta`, just make sure to replace it in the installation command.
 
-### Kubectl Plugin Manager (krew) with custom index (pre-release versions)
-
---TBD--
 
 ### Manual
 

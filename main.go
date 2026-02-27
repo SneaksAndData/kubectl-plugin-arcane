@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/services"
 	"go.uber.org/fx"
@@ -29,6 +30,8 @@ func main() {
 		fx.Provide(commands.NewStreamBackfill),
 		fx.Provide(services.NewStreamService),
 		fx.Provide(services.NewClientProvider),
+		fx.Provide(services.NewDowntimeProcessorFactory),
+		fx.Provide(services.NewUnstructuredReader),
 		fx.NopLogger,
 		fx.Invoke(
 			func(rootCmd commands.RootCommand, shutDowner fx.Shutdowner, lifeCycle fx.Lifecycle) error {

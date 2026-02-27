@@ -3,40 +3,41 @@ package services
 import (
 	"context"
 	"fmt"
+	"os"
+	"strings"
+	"sync"
+
 	streamapis "github.com/SneaksAndData/arcane-operator/services/controllers/stream"
-	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/interfaces"
+	cmdinterfaces "github.com/sneaksAndData/kubectl-plugin-arcane/commands/interfaces"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/models"
+	"github.com/sneaksAndData/kubectl-plugin-arcane/services/interfaces"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/cli-runtime/pkg/printers"
 	"k8s.io/client-go/util/workqueue"
-	"os"
-	"strings"
-	"sync"
 )
 
-// Ensure downtime implements interfaces.DowntimeService
-var _ interfaces.DowntimeService = (*downtime)(nil)
+// Ensure downtime implements cmdinterfaces.DowntimeService
+var _ cmdinterfaces.DowntimeService = (*downtime)(nil)
 
 // Queue is a typed rate-limiting work queue for unstructured objects.
 type Queue = workqueue.TypedRateLimitingInterface[streamapis.Definition]
-
-// UnstructuredProcessor is a function that processes an unstructured object and returns an updated unstructured object or an error.
-type UnstructuredProcessor func(def streamapis.Definition) error
 
 // UnstructuredObjectFilter is a function that filters unstructured objects based on custom criteria.
 type UnstructuredObjectFilter func(item streamapis.Definition) bool
 
 // downtime is a service that provides downtime operations.
 type downtime struct {
-	clientProvider interfaces.ClientProvider
+	clientProvider cmdinterfaces.ClientProvider
+	factory        *DowntimeProcessorFactory
 }
 
 // NewDowntimeService creates a new instance of the downtime, which provides downtime operations.
-func NewDowntimeService(clientProvider interfaces.ClientProvider) interfaces.DowntimeService {
+func NewDowntimeService(clientProvider cmdinterfaces.ClientProvider, factory *DowntimeProcessorFactory) cmdinterfaces.DowntimeService {
 	return &downtime{
 		clientProvider: clientProvider,
+		factory:        factory,
 	}
 }
 
@@ -46,7 +47,7 @@ func (s *downtime) DeclareDowntime(ctx context.Context, parameters *models.Downt
 		ctx,
 		parameters.StreamClass,
 		filterByNamePrefix(parameters.Prefix),
-		setDowntimeForStream(parameters.DowntimeKey),
+		s.factory.DowntimeDeclareProcessor(parameters),
 		Printer("suspended"),
 	)
 }
@@ -56,68 +57,12 @@ func (s *downtime) StopDowntime(ctx context.Context, parameters *models.Downtime
 	return s.runWithQueue(ctx,
 		parameters.StreamClass,
 		filterByDowntimeKey(parameters.DowntimeKey),
-		unsetDowntimeForStream(parameters.DowntimeKey),
+		s.factory.DowntimeStopProcessor(parameters),
 		Printer("started"),
 	)
 }
 
-func setDowntimeForStream(key string) UnstructuredProcessor {
-	return func(def streamapis.Definition) error {
-		item := def.ToUnstructured()
-		labels := item.GetLabels()
-
-		if labels == nil {
-			labels = make(map[string]string)
-		}
-
-		// Skip if already has a downtime key that's different
-		if existingKey, exists := labels["arcane.sneaksanddata.com/downtime"]; exists && existingKey != key {
-			return nil
-		}
-
-		labels["arcane.sneaksanddata.com/downtime"] = key
-		item.SetLabels(labels)
-
-		definition, err := streamapis.FromUnstructured(item)
-		if err != nil {
-			return err
-		}
-		err = definition.SetSuspended(true)
-		if err != nil {
-			return err
-		}
-
-		return nil
-	}
-}
-
-func unsetDowntimeForStream(key string) UnstructuredProcessor {
-	return func(def streamapis.Definition) error {
-		item := def.ToUnstructured()
-		labels := item.GetLabels()
-
-		if labels["arcane.sneaksanddata.com/downtime"] != key {
-			return nil // Skip items that don't match the downtime key
-		}
-
-		delete(labels, "arcane.sneaksanddata.com/downtime")
-		item.SetLabels(labels)
-
-		definition, err := streamapis.FromUnstructured(item)
-		if err != nil {
-			return err
-		}
-
-		err = definition.SetSuspended(false)
-		if err != nil {
-			return err
-		}
-
-		return nil
-	}
-}
-
-func (s *downtime) runWithQueue(ctx context.Context, streamClass string, filter UnstructuredObjectFilter, process UnstructuredProcessor, printer printers.ResourcePrinter) error {
+func (s *downtime) runWithQueue(ctx context.Context, streamClass string, filter UnstructuredObjectFilter, process interfaces.UnstructuredProcessor, printer printers.ResourcePrinter) error {
 	rateLimiter := workqueue.DefaultTypedControllerRateLimiter[streamapis.Definition]()
 	queue := workqueue.NewTypedRateLimitingQueue[streamapis.Definition](rateLimiter)
 	defer queue.ShutDown()
@@ -192,7 +137,7 @@ func filterByDowntimeKey(key string) func(streamapis.Definition) bool {
 	}
 }
 
-func (s *downtime) processObjects(ctx context.Context, queue Queue, process UnstructuredProcessor, printer printers.ResourcePrinter) {
+func (s *downtime) processObjects(ctx context.Context, queue Queue, process interfaces.UnstructuredProcessor, printer printers.ResourcePrinter) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -203,7 +148,7 @@ func (s *downtime) processObjects(ctx context.Context, queue Queue, process Unst
 				return
 			}
 
-			err := process(item)
+			updated, err := process.Process(ctx, item.NamespacedName())
 			if err != nil {
 				logError(item.ToUnstructured(), "modifying object, will retry later", err)
 				queue.AddRateLimited(item)
@@ -219,7 +164,7 @@ func (s *downtime) processObjects(ctx context.Context, queue Queue, process Unst
 				continue
 			}
 
-			err = unstructuredClient.Update(ctx, item.ToUnstructured())
+			err = unstructuredClient.Update(ctx, updated)
 			if err != nil {
 				logError(item.ToUnstructured(), "updating client, will retry later", err)
 				queue.AddRateLimited(item)
@@ -228,7 +173,7 @@ func (s *downtime) processObjects(ctx context.Context, queue Queue, process Unst
 
 			queue.Forget(item)
 			queue.Done(item)
-			err = printer.PrintObj(item.ToUnstructured(), os.Stdout)
+			err = printer.PrintObj(updated, os.Stdout)
 			if err != nil {
 				// If we can't print, we still consider the item processed successfully, so we forget it and move on.
 				continue

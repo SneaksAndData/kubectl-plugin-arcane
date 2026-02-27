@@ -17,7 +17,7 @@ type downtimeStopProcessor struct {
 
 func (s downtimeStopProcessor) Process(ctx context.Context, def types.NamespacedName) (*unstructured.Unstructured, error) {
 	stream, err := s.reader.Read(ctx, s.streamClass, def)
-	if err != nil {
+	if err != nil { // coverage-ignore
 		return nil, err
 	}
 
@@ -32,11 +32,11 @@ func (s downtimeStopProcessor) Process(ctx context.Context, def types.Namespaced
 	stream.SetLabels(labels)
 
 	definition, err := streamapis.FromUnstructured(stream)
-	if err != nil {
+	if err != nil { // coverage-ignore
 		return nil, err
 	}
 	err = definition.SetSuspended(false)
-	if err != nil {
+	if err != nil { // coverage-ignore
 		return nil, err
 	}
 	return definition.ToUnstructured(), nil

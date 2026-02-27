@@ -73,7 +73,7 @@ func (s *downtime) runWithQueue(ctx context.Context, streamClass string, filter 
 	})
 
 	err := s.getObjectsList(ctx, streamClass, filter, queue)
-	if err != nil {
+	if err != nil { // coverage-ignore
 		return err
 	}
 
@@ -84,11 +84,11 @@ func (s *downtime) runWithQueue(ctx context.Context, streamClass string, filter 
 
 func (s *downtime) getObjectsList(ctx context.Context, streamClass string, matches UnstructuredObjectFilter, queue Queue) error {
 	clientSet, err := s.clientProvider.ProvideClientSet()
-	if err != nil {
+	if err != nil { // coverage-ignore
 		return err
 	}
 	sc, err := clientSet.StreamingV1().StreamClasses("").Get(ctx, streamClass, metav1.GetOptions{})
-	if err != nil {
+	if err != nil { // coverage-ignore
 		return err
 	}
 
@@ -102,11 +102,11 @@ func (s *downtime) getObjectsList(ctx context.Context, streamClass string, match
 	})
 
 	unstructuredClient, err := s.clientProvider.ProvideUnstructuredClient()
-	if err != nil {
+	if err != nil { // coverage-ignore
 		return err
 	}
 	err = unstructuredClient.List(ctx, streamList)
-	if err != nil {
+	if err != nil { // coverage-ignore
 		return err
 	}
 

@@ -16,7 +16,22 @@ A kubectl plugin for managing [Arcane](https://github.com/SneaksAndData/arcane-o
 
 ### Kubectl Plugin Manager (krew) with custom index (pre-release versions)
 
---TBD--
+1. Add the custom index for pre-release versions:
+Assuming that the name of the custom index is `beta`:
+
+```sh
+kubectl krew index add beta https://github.com/SneaksAndData/krew-index.git
+```
+
+2. Install the plugin:
+
+```sh
+kubectl krew install beta/arcane 
+```
+
+> [!NOTE]
+> You can use any name for the custom index instead of `beta`, just make sure to replace it in the installation command.
+
 
 ### Manual
 

@@ -2,8 +2,8 @@ github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 h1:L/gRVlceqvL25
 github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161/go.mod h1:xomTg63KZ2rFqZQzSB4Vz2SUXa1BpHTVz9L5PTmPC4E=
 github.com/Masterminds/semver/v3 v3.4.0 h1:Zog+i5UMtVoCU8oKka5P7i9q9HgrJeGzI9SA1Xbatp0=
 github.com/Masterminds/semver/v3 v3.4.0/go.mod h1:4V+yj/TJE1HU9XfppCwVMZq3I84lprf4nC11bSS5beM=
-github.com/SneaksAndData/arcane-operator v1.0.9 h1:GSlqvU3iYk1f29E9k+S8gm/QNaP2ZHaq6FLFGS2OpkI=
-github.com/SneaksAndData/arcane-operator v1.0.9/go.mod h1:b5EAnu+yD22oAYdBf9iKlxs5PTGV8A89A43M/UtEnyM=
+github.com/SneaksAndData/arcane-operator v1.0.10 h1:MRiXcTcmX194XO4rHVwuEdCxRd7wluM0iOpU/HuI4tI=
+github.com/SneaksAndData/arcane-operator v1.0.10/go.mod h1:b5EAnu+yD22oAYdBf9iKlxs5PTGV8A89A43M/UtEnyM=
 github.com/SneaksAndData/arcane-stream-mock v1.0.7 h1:IJ+2fyF+lITarmTDnYVKLqVbkdhArP8y1XnASctGk04=
 github.com/SneaksAndData/arcane-stream-mock v1.0.7/go.mod h1:5/MIiB9A3hn1L8HW29e3XkiQ634L9mPQrprDu/MmqIs=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=

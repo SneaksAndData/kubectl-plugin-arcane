@@ -2,6 +2,9 @@ package services
 
 import (
 	"context"
+	"testing"
+	"time"
+
 	versionedv1 "github.com/SneaksAndData/arcane-operator/pkg/generated/clientset/versioned"
 	mockv1 "github.com/SneaksAndData/arcane-stream-mock/pkg/apis/streaming/v1"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/models"
@@ -11,8 +14,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"testing"
-	"time"
 )
 
 func TestDowntime_DeclareDowntime(t *testing.T) {
@@ -30,7 +31,8 @@ func TestDowntime_DeclareDowntime(t *testing.T) {
 	c, err := client.New(kubeConfig, client.Options{})
 	require.NoError(t, err)
 
-	downtimeService := NewDowntimeService(NewFakeClientProvider(streamingClientSet, c))
+	clientProvider := NewFakeClientProvider(streamingClientSet, c)
+	downtimeService := NewDowntimeService(clientProvider, NewDowntimeProcessorFactory(NewUnstructuredReader(clientProvider)))
 
 	err = WakeUp(t, name)
 	require.NoError(t, err)
@@ -66,7 +68,8 @@ func TestDowntime_StopDowntime(t *testing.T) {
 	c, err := client.New(kubeConfig, client.Options{})
 	require.NoError(t, err)
 
-	downtimeService := NewDowntimeService(NewFakeClientProvider(streamingClientSet, c))
+	clientProvider := NewFakeClientProvider(streamingClientSet, c)
+	downtimeService := NewDowntimeService(clientProvider, NewDowntimeProcessorFactory(NewUnstructuredReader(clientProvider)))
 
 	err = downtimeService.StopDowntime(t.Context(), &models.DowntimeStopParameters{
 		StreamClass: "arcane-stream-mock",

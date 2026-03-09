@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"strings"
 	"sync"
@@ -179,13 +178,5 @@ func (s *downtime) processObjects(ctx context.Context, queue Queue, process inte
 				continue
 			}
 		}
-	}
-}
-
-func logError(object *unstructured.Unstructured, operation string, cause error) {
-	name := FormatName(object)
-	_, err := fmt.Fprintf(os.Stderr, "%s Failed %s: %v\n", name, operation, cause)
-	if err != nil {
-		panic(err)
 	}
 }

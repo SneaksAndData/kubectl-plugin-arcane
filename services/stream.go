@@ -3,6 +3,9 @@ package services
 import (
 	"context"
 	"fmt"
+	"os"
+	"time"
+
 	"github.com/SneaksAndData/arcane-operator/pkg/apis/streaming/v1"
 	streamapis "github.com/SneaksAndData/arcane-operator/services/controllers/stream"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/interfaces"
@@ -13,8 +16,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/cli-runtime/pkg/printers"
-	"os"
-	"time"
 )
 
 const fieldManager = "kubectl-arcane"
@@ -73,7 +74,7 @@ func (s *stream) Backfill(ctx context.Context, parameters *models.BackfillParame
 		select {
 		case event, ok := <-watch.ResultChan():
 			if !ok {
-				return fmt.Errorf("watch channel closed")
+				logError(bfr, "watching backfill request, retrying", fmt.Errorf("watch channel closed"))
 			}
 			bfr, ok := event.Object.(*v1.BackfillRequest)
 			if !ok {

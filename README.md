@@ -14,7 +14,10 @@ A kubectl plugin for managing [Arcane](https://github.com/SneaksAndData/arcane-o
 
 --TBD--
 
-### Kubectl Plugin Manager (krew) with custom index (pre-release versions)
+### Kubectl Plugin Manager (krew) with custom index 
+
+Ensure that you have `krew` installed and configured on your system. If you don't have it installed,
+you can follow the instructions in the [krew documentation](https://krew.sigs.k8s.io/docs/user-guide/setup/install/).
 
 1. Add the custom index for pre-release versions:
 Assuming that the name of the custom index is `beta`:

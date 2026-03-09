@@ -60,35 +60,38 @@ func (s *stream) Backfill(ctx context.Context, parameters *models.BackfillParame
 	if err != nil {
 		return err
 	}
-	watch, err := clientSet.StreamingV1().BackfillRequests(parameters.Namespace).Watch(ctx, metav1.ListOptions{
-		FieldSelector:   "metadata.name=" + bfr.Name,
-		Watch:           true,
-		ResourceVersion: bfr.ResourceVersion,
-	})
-	if err != nil {
-		return fmt.Errorf("error watching backfill request: %w", err)
-	}
-	defer watch.Stop()
-
-	for {
-		select {
-		case event, ok := <-watch.ResultChan():
-			if !ok {
-				logError(bfr, "watching backfill request, retrying", fmt.Errorf("watch channel closed"))
-			}
-			bfr, ok := event.Object.(*v1.BackfillRequest)
-			if !ok {
-				return fmt.Errorf("unexpected object type: %T", event.Object)
-			}
-
-			if bfr.Spec.Completed {
-				return Printer("completed").PrintObj(bfr, os.Stdout)
-			}
-
-		case <-ctx.Done():
-			return ctx.Err()
+	return wait.PollUntilContextCancel(ctx, 1*time.Second, true, func(ctx context.Context) (done bool, err error) {
+		watch, err := clientSet.StreamingV1().BackfillRequests(parameters.Namespace).Watch(ctx, metav1.ListOptions{
+			FieldSelector:   "metadata.name=" + bfr.Name,
+			Watch:           true,
+			ResourceVersion: bfr.ResourceVersion,
+		})
+		if err != nil {
+			return false, fmt.Errorf("error watching backfill request: %w", err)
 		}
-	}
+		defer watch.Stop()
+
+		for {
+			select {
+			case event, ok := <-watch.ResultChan():
+				if !ok {
+					logError(bfr, "watching backfill request, retrying", fmt.Errorf("watch channel closed"))
+					return false, nil // watch channel closed, retry
+				}
+				bfr, ok := event.Object.(*v1.BackfillRequest)
+				if !ok {
+					return false, fmt.Errorf("unexpected object type: %T", event.Object)
+				}
+
+				if bfr.Spec.Completed {
+					return true, Printer("completed").PrintObj(bfr, os.Stdout)
+				}
+
+			case <-ctx.Done():
+				return true, ctx.Err()
+			}
+		}
+	})
 }
 
 // Start is a method that allows users to start a stream, use the <key> parameter to identify the stream to start

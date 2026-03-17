@@ -15,6 +15,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/cli-runtime/pkg/printers"
 	"k8s.io/client-go/util/workqueue"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // Ensure downtime implements cmdinterfaces.DowntimeService
@@ -88,7 +89,10 @@ func (s *downtime) getObjectsList(ctx context.Context, streamClass string, match
 	if err != nil { // coverage-ignore
 		return err
 	}
-	sc, err := clientSet.StreamingV1().StreamClasses(namespace).Get(ctx, streamClass, metav1.GetOptions{})
+	sc, err := clientSet.
+		StreamingV1().
+		StreamClasses(""). // StreamClasses are cluster-scoped, so we ignore the namespace parameter here.
+		Get(ctx, streamClass, metav1.GetOptions{})
 	if err != nil { // coverage-ignore
 		return err
 	}
@@ -106,7 +110,7 @@ func (s *downtime) getObjectsList(ctx context.Context, streamClass string, match
 	if err != nil { // coverage-ignore
 		return err
 	}
-	err = unstructuredClient.List(ctx, streamList)
+	err = unstructuredClient.List(ctx, streamList, client.InNamespace(namespace))
 	if err != nil { // coverage-ignore
 		return err
 	}

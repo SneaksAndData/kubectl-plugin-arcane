@@ -11,6 +11,7 @@ import (
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/interfaces"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/models"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/errors"
+	"github.com/sneaksAndData/kubectl-plugin-arcane/logging"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -53,10 +54,10 @@ func (s *stream) Backfill(ctx context.Context, parameters *models.BackfillParame
 	}
 
 	if !parameters.Wait {
-		return Printer("created").PrintObj(bfr, os.Stdout)
+		return logging.Printer("created").PrintObj(bfr, os.Stdout)
 	}
 
-	err = Printer("started").PrintObj(bfr, os.Stdout)
+	err = logging.Printer("started").PrintObj(bfr, os.Stdout)
 	if err != nil {
 		return err
 	}
@@ -75,7 +76,7 @@ func (s *stream) Backfill(ctx context.Context, parameters *models.BackfillParame
 			select {
 			case event, ok := <-watch.ResultChan():
 				if !ok {
-					logError(bfr, "watching backfill request, retrying", fmt.Errorf("watch channel closed"))
+					logging.LogError(bfr, "watching backfill request, retrying", fmt.Errorf("watch channel closed"))
 					return false, nil // watch channel closed, retry
 				}
 				bfr, ok := event.Object.(*v1.BackfillRequest)
@@ -84,7 +85,7 @@ func (s *stream) Backfill(ctx context.Context, parameters *models.BackfillParame
 				}
 
 				if bfr.Spec.Completed {
-					return true, Printer("completed").PrintObj(bfr, os.Stdout)
+					return true, logging.Printer("completed").PrintObj(bfr, os.Stdout)
 				}
 
 			case <-ctx.Done():
@@ -96,7 +97,7 @@ func (s *stream) Backfill(ctx context.Context, parameters *models.BackfillParame
 
 // Start is a method that allows users to start a stream, use the <key> parameter to identify the stream to start
 func (s *stream) Start(ctx context.Context, parameters *models.StartParameters) error {
-	printer := Printer("started")
+	printer := logging.Printer("started")
 	return wait.PollUntilContextCancel(ctx, 1*time.Second, true, func(ctx context.Context) (done bool, err error) {
 		err = s.modifyStreamDefinition(ctx,
 			parameters.Namespace,
@@ -120,7 +121,7 @@ func (s *stream) Start(ctx context.Context, parameters *models.StartParameters) 
 
 // Stop is a method that allows users to stop a stream, use the <key> parameter to identify the stream to stop
 func (s *stream) Stop(ctx context.Context, parameters *models.StopParameters) error {
-	printer := Printer("stopped")
+	printer := logging.Printer("stopped")
 	return wait.PollUntilContextCancel(ctx, 1*time.Second, true, func(ctx context.Context) (done bool, err error) {
 		err = s.modifyStreamDefinition(ctx,
 			parameters.Namespace,

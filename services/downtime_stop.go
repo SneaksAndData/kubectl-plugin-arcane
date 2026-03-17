@@ -4,6 +4,7 @@ import (
 	"context"
 
 	streamapis "github.com/SneaksAndData/arcane-operator/services/controllers/stream"
+	"github.com/sneaksAndData/kubectl-plugin-arcane/logging"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/services/interfaces"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
@@ -24,7 +25,7 @@ func (s downtimeStopProcessor) Process(ctx context.Context, def types.Namespaced
 	labels := stream.GetLabels()
 
 	if labels["arcane.sneaksanddata.com/downtime"] != s.key {
-		logError(stream, "has a different downtime key, skipping", err)
+		logging.LogError(stream, "has a different downtime key, skipping", err)
 		return nil, nil // Skip items that don't match the downtime key
 	}
 

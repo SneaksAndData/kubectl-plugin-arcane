@@ -10,40 +10,39 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-var _ interfaces.UnstructuredProcessor = (*downtimeDeclareProcessor)(nil)
-
-type downtimeDeclareProcessor struct {
+type downtimeSummarizationProcessor struct {
 	key         string
 	reader      interfaces.UnstructuredReader
 	streamClass string
 }
 
-func (s *downtimeDeclareProcessor) Process(ctx context.Context, def types.NamespacedName) (*unstructured.Unstructured, error) {
+func (s downtimeStopProcessor) Process(ctx context.Context, def types.NamespacedName) (*unstructured.Unstructured, error) {
 	stream, err := s.reader.Read(ctx, s.streamClass, def)
-	if err != nil {
+	if err != nil { // coverage-ignore
 		return nil, err
 	}
 
 	labels := stream.GetLabels()
 
-	if existingKey, exists := labels["arcane.sneaksanddata.com/downtime"]; exists && existingKey != s.key {
-		logging.LogError(stream, "already has a different downtime key", err)
-		return nil, nil // Skip items that already have a different downtime key
-	}
-
 	if labels == nil {
-		labels = make(map[string]string)
+		logging.LogError(stream, "has no labels, skipping", err)
+		return nil, nil // Skip items that have no labels
 	}
 
-	labels["arcane.sneaksanddata.com/downtime"] = s.key
+	if labels["arcane.sneaksanddata.com/downtime"] != s.key {
+		logging.LogError(stream, "has a different downtime key, skipping", err)
+		return nil, nil // Skip items that don't match the downtime key
+	}
+
+	delete(labels, "arcane.sneaksanddata.com/downtime")
 	stream.SetLabels(labels)
 
 	definition, err := streamapis.FromUnstructured(stream)
-	if err != nil {
+	if err != nil { // coverage-ignore
 		return nil, err
 	}
-	err = definition.SetSuspended(true)
-	if err != nil {
+	err = definition.SetSuspended(false)
+	if err != nil { // coverage-ignore
 		return nil, err
 	}
 	return definition.ToUnstructured(), nil

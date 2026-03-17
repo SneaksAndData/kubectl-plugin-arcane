@@ -1,10 +1,11 @@
-package services
+package publisher
 
 import (
 	"context"
 
 	streamapis "github.com/SneaksAndData/arcane-operator/services/controllers/stream"
 	cmdinterfaces "github.com/sneaksAndData/kubectl-plugin-arcane/commands/interfaces"
+	"github.com/sneaksAndData/kubectl-plugin-arcane/logging"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/services/interfaces"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -12,17 +13,17 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var _ interfaces.QueuePublisher = (*StreamClassMembersPublisher)(nil)
+var _ interfaces.QueuePublisher = (*StreamClassMembers)(nil)
 
-type StreamClassMembersPublisher struct {
+type StreamClassMembers struct {
 	clientProvider cmdinterfaces.ClientProvider
 	streamClass    string
 	namespace      string
 	objectFilter   interfaces.ObjectFilter
 }
 
-func NewStreamClassMembersPublisher(provider cmdinterfaces.ClientProvider, streamClass string, namespace string, objectFilter interfaces.ObjectFilter) *StreamClassMembersPublisher {
-	return &StreamClassMembersPublisher{
+func NewStreamClassMembersPublisher(provider cmdinterfaces.ClientProvider, streamClass string, namespace string, objectFilter interfaces.ObjectFilter) *StreamClassMembers {
+	return &StreamClassMembers{
 		clientProvider: provider,
 		streamClass:    streamClass,
 		namespace:      namespace,
@@ -30,7 +31,7 @@ func NewStreamClassMembersPublisher(provider cmdinterfaces.ClientProvider, strea
 	}
 }
 
-func (s StreamClassMembersPublisher) PublishStreamDefinitions(ctx context.Context, queue interfaces.Queue) error {
+func (s StreamClassMembers) PublishStreamDefinitions(ctx context.Context, queue interfaces.Queue) error {
 	clientSet, err := s.clientProvider.ProvideClientSet()
 	if err != nil { // coverage-ignore
 		return err
@@ -64,13 +65,13 @@ func (s StreamClassMembersPublisher) PublishStreamDefinitions(ctx context.Contex
 	for _, item := range streamList.Items {
 		streamDefinition, err := streamapis.FromUnstructured(&item)
 		if err != nil {
-			logError(&item, "parsing kubernetes object, skipping", err)
+			logging.LogError(&item, "parsing kubernetes object, skipping", err)
 			continue // Skip items that can't be parsed as stream definitions
 		}
 
 		matches, err := s.objectFilter.Matches(streamDefinition)
 		if err != nil {
-			logError(&item, "applying object filter, skipping", err)
+			logging.LogError(&item, "applying object filter, skipping", err)
 			continue // Skip items that cause errors when applying the filter
 		}
 		if !matches {

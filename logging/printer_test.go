@@ -1,11 +1,12 @@
-package services
+package logging
 
 import (
+	"testing"
+
 	"github.com/SneaksAndData/arcane-operator/pkg/apis/streaming/v1"
 	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"testing"
 )
 
 func Test_FormatName(t *testing.T) {

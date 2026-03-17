@@ -8,8 +8,10 @@ import (
 	streamapis "github.com/SneaksAndData/arcane-operator/services/controllers/stream"
 	cmdinterfaces "github.com/sneaksAndData/kubectl-plugin-arcane/commands/interfaces"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/models"
+	"github.com/sneaksAndData/kubectl-plugin-arcane/logging"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/services/filter"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/services/interfaces"
+	publisher "github.com/sneaksAndData/kubectl-plugin-arcane/services/publisher"
 	"k8s.io/cli-runtime/pkg/printers"
 	"k8s.io/client-go/util/workqueue"
 )
@@ -40,23 +42,26 @@ func NewDowntimeService(clientProvider cmdinterfaces.ClientProvider, factory *Do
 // DeclareDowntime is a method that allows users to declare downtime for a stream or a list of streams, use the <key> parameter to identify the stream(s) to pause
 func (s *downtime) DeclareDowntime(ctx context.Context, parameters *models.DowntimeDeclareParameters) error {
 	f := filter.NewUnsuspendedByNamePrefix(parameters.Prefix)
-	publisher := NewStreamClassMembersPublisher(s.clientProvider, parameters.StreamClass, parameters.Namespace, f)
-	return s.runWithQueue(
-		ctx,
-		s.factory.DowntimeDeclareProcessor(parameters),
-		Printer("suspended"),
-		publisher,
-	)
+	p := publisher.NewStreamClassMembersPublisher(s.clientProvider, parameters.StreamClass, parameters.Namespace, f)
+	return s.runWithQueue(ctx, s.factory.DowntimeDeclareProcessor(parameters), logging.Printer("suspended"), p)
 }
 
 // StopDowntime is a method that allows users to stop downtime for a stream or a list of streams, use the <key> parameter to identify the stream(s) to resume
 func (s *downtime) StopDowntime(ctx context.Context, parameters *models.DowntimeStopParameters) error {
 	f := filter.NewByDowntimeKey(parameters.DowntimeKey)
-	publisher := NewStreamClassMembersPublisher(s.clientProvider, parameters.StreamClass, "", f)
+	p := publisher.NewStreamClassMembersPublisher(s.clientProvider, parameters.StreamClass, "", f)
+	return s.runWithQueue(ctx, s.factory.DowntimeStopProcessor(parameters), logging.Printer("started"), p)
+}
+
+func (s *downtime) ListDowntimes(ctx context.Context, parameters *models.DowntimeListParameters) error {
+	if parameters.StreamClass == "" {
+		panic("not implemented: listing downtimes without specifying a stream class is not supported yet") // coverage-ignore
+	}
+	p := publisher.NewStreamClassMembersPublisher(s.clientProvider, parameters.StreamClass, "", f)
 	return s.runWithQueue(ctx,
 		s.factory.DowntimeStopProcessor(parameters),
-		Printer("started"),
-		publisher,
+		logging.Printer("started"),
+		p,
 	)
 }
 
@@ -93,14 +98,14 @@ func (s *downtime) processObjects(ctx context.Context, queue Queue, process inte
 
 			updated, err := process.Process(ctx, item.NamespacedName())
 			if err != nil {
-				logError(item.ToUnstructured(), "modifying object, will retry later", err)
+				logging.logError(item.ToUnstructured(), "modifying object, will retry later", err)
 				queue.AddRateLimited(item)
 				continue
 			}
 
 			unstructuredClient, err := s.clientProvider.ProvideUnstructuredClient()
 			if err != nil {
-				logError(item.ToUnstructured(), "in constructing kubernetes client, will not retry", err)
+				logging.logError(item.ToUnstructured(), "in constructing kubernetes client, will not retry", err)
 				// If we can't get a client, there's no point in retrying, so we forget the item and move on.
 				queue.Forget(item)
 				queue.Done(item)
@@ -109,7 +114,7 @@ func (s *downtime) processObjects(ctx context.Context, queue Queue, process inte
 
 			err = unstructuredClient.Update(ctx, updated)
 			if err != nil {
-				logError(item.ToUnstructured(), "updating client, will retry later", err)
+				logging.logError(item.ToUnstructured(), "updating client, will retry later", err)
 				queue.AddRateLimited(item)
 				continue
 			}

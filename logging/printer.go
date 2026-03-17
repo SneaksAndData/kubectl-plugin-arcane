@@ -1,13 +1,14 @@
-package services
+package logging
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/SneaksAndData/arcane-operator/pkg/apis/streaming/v1"
 	apiv1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/cli-runtime/pkg/printers"
 	"k8s.io/client-go/kubernetes/scheme"
-	"strings"
 )
 
 type PrintableObject interface {

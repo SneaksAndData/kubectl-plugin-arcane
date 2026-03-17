@@ -10,12 +10,8 @@ import (
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/models"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/services/filter"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/services/interfaces"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/cli-runtime/pkg/printers"
 	"k8s.io/client-go/util/workqueue"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // Ensure downtime implements cmdinterfaces.DowntimeService
@@ -81,52 +77,6 @@ func (s *downtime) runWithQueue(ctx context.Context, process interfaces.Unstruct
 
 	queue.ShutDownWithDrain()
 	wg.Wait()
-	return nil
-}
-
-func (s *downtime) getObjectsList(ctx context.Context, streamClass string, matches UnstructuredObjectFilter, queue Queue, namespace string) error {
-	clientSet, err := s.clientProvider.ProvideClientSet()
-	if err != nil { // coverage-ignore
-		return err
-	}
-	sc, err := clientSet.
-		StreamingV1().
-		StreamClasses(""). // StreamClasses are cluster-scoped, so we ignore the namespace parameter here.
-		Get(ctx, streamClass, metav1.GetOptions{})
-	if err != nil { // coverage-ignore
-		return err
-	}
-
-	gvk := sc.TargetResourceGvk()
-
-	streamList := &unstructured.UnstructuredList{}
-	streamList.SetGroupVersionKind(schema.GroupVersionKind{
-		Group:   gvk.Group,
-		Version: gvk.Version,
-		Kind:    gvk.Kind + "List",
-	})
-
-	unstructuredClient, err := s.clientProvider.ProvideUnstructuredClient()
-	if err != nil { // coverage-ignore
-		return err
-	}
-	err = unstructuredClient.List(ctx, streamList, client.InNamespace(namespace))
-	if err != nil { // coverage-ignore
-		return err
-	}
-
-	for _, item := range streamList.Items {
-		streamDefinition, err := streamapis.FromUnstructured(&item)
-		if err != nil {
-			logError(&item, "parsing kubernetes object, skipping", err)
-			continue // Skip items that can't be parsed as stream definitions
-		}
-		if !matches(streamDefinition) {
-			continue
-		}
-		queue.Add(streamDefinition)
-	}
-
 	return nil
 }
 

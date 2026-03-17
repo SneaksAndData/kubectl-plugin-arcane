@@ -3,12 +3,12 @@ package services
 import (
 	"context"
 	"os"
-	"strings"
 	"sync"
 
 	streamapis "github.com/SneaksAndData/arcane-operator/services/controllers/stream"
 	cmdinterfaces "github.com/sneaksAndData/kubectl-plugin-arcane/commands/interfaces"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/models"
+	"github.com/sneaksAndData/kubectl-plugin-arcane/services/filter"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/services/interfaces"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -43,28 +43,28 @@ func NewDowntimeService(clientProvider cmdinterfaces.ClientProvider, factory *Do
 
 // DeclareDowntime is a method that allows users to declare downtime for a stream or a list of streams, use the <key> parameter to identify the stream(s) to pause
 func (s *downtime) DeclareDowntime(ctx context.Context, parameters *models.DowntimeDeclareParameters) error {
+	f := filter.NewUnsuspendedByNamePrefix(parameters.Prefix)
+	publisher := NewStreamClassMembersPublisher(s.clientProvider, parameters.StreamClass, parameters.Namespace, f)
 	return s.runWithQueue(
 		ctx,
-		parameters.StreamClass,
-		filterByNamePrefix(parameters.Prefix),
 		s.factory.DowntimeDeclareProcessor(parameters),
 		Printer("suspended"),
-		parameters.Namespace,
+		publisher,
 	)
 }
 
 // StopDowntime is a method that allows users to stop downtime for a stream or a list of streams, use the <key> parameter to identify the stream(s) to resume
 func (s *downtime) StopDowntime(ctx context.Context, parameters *models.DowntimeStopParameters) error {
+	f := filter.NewByDowntimeKey(parameters.DowntimeKey)
+	publisher := NewStreamClassMembersPublisher(s.clientProvider, parameters.StreamClass, "", f)
 	return s.runWithQueue(ctx,
-		parameters.StreamClass,
-		filterByDowntimeKey(parameters.DowntimeKey),
 		s.factory.DowntimeStopProcessor(parameters),
 		Printer("started"),
-		"",
+		publisher,
 	)
 }
 
-func (s *downtime) runWithQueue(ctx context.Context, streamClass string, filter UnstructuredObjectFilter, process interfaces.UnstructuredProcessor, printer printers.ResourcePrinter, namespace string) error {
+func (s *downtime) runWithQueue(ctx context.Context, process interfaces.UnstructuredProcessor, printer printers.ResourcePrinter, queuePublisher interfaces.QueuePublisher) error {
 	rateLimiter := workqueue.DefaultTypedControllerRateLimiter[streamapis.Definition]()
 	queue := workqueue.NewTypedRateLimitingQueue[streamapis.Definition](rateLimiter)
 	defer queue.ShutDown()
@@ -74,7 +74,7 @@ func (s *downtime) runWithQueue(ctx context.Context, streamClass string, filter 
 		s.processObjects(ctx, queue, process, printer)
 	})
 
-	err := s.getObjectsList(ctx, streamClass, filter, queue, namespace)
+	err := queuePublisher.PublishStreamDefinitions(ctx, queue)
 	if err != nil { // coverage-ignore
 		return err
 	}
@@ -128,18 +128,6 @@ func (s *downtime) getObjectsList(ctx context.Context, streamClass string, match
 	}
 
 	return nil
-}
-
-func filterByNamePrefix(prefix string) func(streamapis.Definition) bool {
-	return func(u streamapis.Definition) bool {
-		return strings.HasPrefix(u.ToUnstructured().GetName(), prefix) && !u.Suspended()
-	}
-}
-
-func filterByDowntimeKey(key string) func(streamapis.Definition) bool {
-	return func(u streamapis.Definition) bool {
-		return u.ToUnstructured().GetLabels()["arcane.sneaksanddata.com/downtime"] == key
-	}
 }
 
 func (s *downtime) processObjects(ctx context.Context, queue Queue, process interfaces.UnstructuredProcessor, printer printers.ResourcePrinter) {

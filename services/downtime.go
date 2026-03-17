@@ -15,6 +15,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/cli-runtime/pkg/printers"
 	"k8s.io/client-go/util/workqueue"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // Ensure downtime implements cmdinterfaces.DowntimeService
@@ -48,6 +49,7 @@ func (s *downtime) DeclareDowntime(ctx context.Context, parameters *models.Downt
 		filterByNamePrefix(parameters.Prefix),
 		s.factory.DowntimeDeclareProcessor(parameters),
 		Printer("suspended"),
+		parameters.Namespace,
 	)
 }
 
@@ -58,10 +60,11 @@ func (s *downtime) StopDowntime(ctx context.Context, parameters *models.Downtime
 		filterByDowntimeKey(parameters.DowntimeKey),
 		s.factory.DowntimeStopProcessor(parameters),
 		Printer("started"),
+		"",
 	)
 }
 
-func (s *downtime) runWithQueue(ctx context.Context, streamClass string, filter UnstructuredObjectFilter, process interfaces.UnstructuredProcessor, printer printers.ResourcePrinter) error {
+func (s *downtime) runWithQueue(ctx context.Context, streamClass string, filter UnstructuredObjectFilter, process interfaces.UnstructuredProcessor, printer printers.ResourcePrinter, namespace string) error {
 	rateLimiter := workqueue.DefaultTypedControllerRateLimiter[streamapis.Definition]()
 	queue := workqueue.NewTypedRateLimitingQueue[streamapis.Definition](rateLimiter)
 	defer queue.ShutDown()
@@ -71,7 +74,7 @@ func (s *downtime) runWithQueue(ctx context.Context, streamClass string, filter 
 		s.processObjects(ctx, queue, process, printer)
 	})
 
-	err := s.getObjectsList(ctx, streamClass, filter, queue)
+	err := s.getObjectsList(ctx, streamClass, filter, queue, namespace)
 	if err != nil { // coverage-ignore
 		return err
 	}
@@ -81,12 +84,15 @@ func (s *downtime) runWithQueue(ctx context.Context, streamClass string, filter 
 	return nil
 }
 
-func (s *downtime) getObjectsList(ctx context.Context, streamClass string, matches UnstructuredObjectFilter, queue Queue) error {
+func (s *downtime) getObjectsList(ctx context.Context, streamClass string, matches UnstructuredObjectFilter, queue Queue, namespace string) error {
 	clientSet, err := s.clientProvider.ProvideClientSet()
 	if err != nil { // coverage-ignore
 		return err
 	}
-	sc, err := clientSet.StreamingV1().StreamClasses("").Get(ctx, streamClass, metav1.GetOptions{})
+	sc, err := clientSet.
+		StreamingV1().
+		StreamClasses(""). // StreamClasses are cluster-scoped, so we ignore the namespace parameter here.
+		Get(ctx, streamClass, metav1.GetOptions{})
 	if err != nil { // coverage-ignore
 		return err
 	}
@@ -104,7 +110,7 @@ func (s *downtime) getObjectsList(ctx context.Context, streamClass string, match
 	if err != nil { // coverage-ignore
 		return err
 	}
-	err = unstructuredClient.List(ctx, streamList)
+	err = unstructuredClient.List(ctx, streamList, client.InNamespace(namespace))
 	if err != nil { // coverage-ignore
 		return err
 	}

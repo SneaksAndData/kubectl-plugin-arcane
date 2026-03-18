@@ -5,16 +5,12 @@ import (
 	"os"
 	"sync"
 
-	streamapis "github.com/SneaksAndData/arcane-operator/services/controllers/stream"
 	cmdinterfaces "github.com/sneaksAndData/kubectl-plugin-arcane/commands/interfaces"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/logging"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/services/interfaces"
 	"k8s.io/cli-runtime/pkg/printers"
 	"k8s.io/client-go/util/workqueue"
 )
-
-// Queue is a typed rate-limiting work queue for unstructured objects.
-type Queue = workqueue.TypedRateLimitingInterface[streamapis.Definition]
 
 type executionQueue struct {
 	clientProvider cmdinterfaces.ClientProvider
@@ -27,8 +23,8 @@ func NewExecutionQueue(provider cmdinterfaces.ClientProvider) interfaces.Executi
 }
 
 func (s *executionQueue) ProcessQueue(ctx context.Context, process interfaces.UnstructuredProcessor, printer printers.ResourcePrinter, queuePublisher interfaces.QueuePublisher) error {
-	rateLimiter := workqueue.DefaultTypedControllerRateLimiter[streamapis.Definition]()
-	queue := workqueue.NewTypedRateLimitingQueue[streamapis.Definition](rateLimiter)
+	rateLimiter := workqueue.DefaultTypedControllerRateLimiter[interfaces.QueueItem]()
+	queue := workqueue.NewTypedRateLimitingQueue[interfaces.QueueItem](rateLimiter)
 	defer queue.ShutDown()
 	var wg sync.WaitGroup
 
@@ -46,7 +42,7 @@ func (s *executionQueue) ProcessQueue(ctx context.Context, process interfaces.Un
 	return nil
 }
 
-func (s *executionQueue) processObjects(ctx context.Context, queue Queue, process interfaces.UnstructuredProcessor, printer printers.ResourcePrinter) {
+func (s *executionQueue) processObjects(ctx context.Context, queue interfaces.Queue, process interfaces.UnstructuredProcessor, printer printers.ResourcePrinter) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -57,9 +53,9 @@ func (s *executionQueue) processObjects(ctx context.Context, queue Queue, proces
 				return
 			}
 
-			updated, hasUpdated, err := process.Process(ctx, item.NamespacedName())
+			updated, hasUpdated, err := process.Process(ctx, item.Definition.NamespacedName(), item.Class)
 			if err != nil {
-				logging.LogError(item.ToUnstructured(), "modifying object, will retry later", err)
+				logging.LogError(item.Definition.ToUnstructured(), "modifying object, will retry later", err)
 				queue.AddRateLimited(item)
 				continue
 			}
@@ -73,7 +69,7 @@ func (s *executionQueue) processObjects(ctx context.Context, queue Queue, proces
 
 			unstructuredClient, err := s.clientProvider.ProvideUnstructuredClient()
 			if err != nil {
-				logging.LogError(item.ToUnstructured(), "in constructing kubernetes client, will not retry", err)
+				logging.LogError(item.Definition.ToUnstructured(), "in constructing kubernetes client, will not retry", err)
 				// If we can't get a client, there's no point in retrying, so we forget the item and move on.
 				queue.Forget(item)
 				queue.Done(item)
@@ -82,7 +78,7 @@ func (s *executionQueue) processObjects(ctx context.Context, queue Queue, proces
 
 			err = unstructuredClient.Update(ctx, updated)
 			if err != nil {
-				logging.LogError(item.ToUnstructured(), "updating client, will retry later", err)
+				logging.LogError(item.Definition.ToUnstructured(), "updating client, will retry later", err)
 				queue.AddRateLimited(item)
 				continue
 			}

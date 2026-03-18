@@ -31,7 +31,7 @@ func (s DowntimeProcessorFactory) DowntimeStopProcessor(parameters *models.Downt
 
 func (s DowntimeProcessorFactory) DowntimeSummarizationProcessor(parameters *models.DowntimeListParameters) *DowntimeSummarizationProcessor {
 	return &DowntimeSummarizationProcessor{
-		reader:      s.reader,
-		streamClass: parameters.StreamClass,
+		reader: s.reader,
+		//streamClass: parameters.StreamClass, TODO: optional stream class filtering
 	}
 }

@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 
+	v1 "github.com/SneaksAndData/arcane-operator/pkg/apis/streaming/v1"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/logging"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/services/interfaces"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -12,13 +13,12 @@ import (
 var _ interfaces.UnstructuredProcessor = (*DowntimeSummarizationProcessor)(nil)
 
 type DowntimeSummarizationProcessor struct {
-	reader      interfaces.UnstructuredReader
-	streamClass string
-	Summaries   map[string]int
+	reader    interfaces.UnstructuredReader
+	Summaries map[string]int
 }
 
-func (s DowntimeSummarizationProcessor) Process(ctx context.Context, def types.NamespacedName) (*unstructured.Unstructured, bool, error) {
-	stream, err := s.reader.Read(ctx, s.streamClass, def)
+func (s DowntimeSummarizationProcessor) Process(ctx context.Context, def types.NamespacedName, class *v1.StreamClass) (*unstructured.Unstructured, bool, error) {
+	stream, err := s.reader.Read(ctx, class, def)
 	if err != nil { // coverage-ignore
 		return nil, false, err
 	}

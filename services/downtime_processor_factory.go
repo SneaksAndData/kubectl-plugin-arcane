@@ -17,17 +17,15 @@ func NewDowntimeProcessorFactory(reader interfaces.UnstructuredReader) *Downtime
 
 func (s DowntimeProcessorFactory) DowntimeDeclareProcessor(parameters *models.DowntimeDeclareParameters) interfaces.UnstructuredProcessor {
 	return &downtimeDeclareProcessor{
-		key:         parameters.DowntimeKey,
-		reader:      s.reader,
-		streamClass: parameters.StreamClass,
+		key:    parameters.DowntimeKey,
+		reader: s.reader,
 	}
 }
 
 func (s DowntimeProcessorFactory) DowntimeStopProcessor(parameters *models.DowntimeStopParameters) interfaces.UnstructuredProcessor {
 	return &downtimeStopProcessor{
-		key:         parameters.DowntimeKey,
-		reader:      s.reader,
-		streamClass: parameters.StreamClass,
+		key:    parameters.DowntimeKey,
+		reader: s.reader,
 	}
 }
 

@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"context"
+
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/models"
 )
 
@@ -13,4 +14,7 @@ type DowntimeService interface {
 
 	// StopDowntime ends an active downtime period for specified streams based on the provided command and arguments.
 	StopDowntime(ctx context.Context, parameters *models.DowntimeStopParameters) error
+
+	// ListDowntimes retrieves a list of active downtime keys in the cluster, optionally filtered by stream class.
+	ListDowntimes(ctx context.Context, parameters *models.DowntimeListParameters) (map[string]int, error)
 }

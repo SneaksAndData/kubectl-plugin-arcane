@@ -28,3 +28,7 @@ func (s DowntimeProcessorFactory) DowntimeStopProcessor(parameters *models.Downt
 		reader: s.reader,
 	}
 }
+
+func (s DowntimeProcessorFactory) DowntimeSummarizationProcessor() *DowntimeSummarizationProcessor {
+	return NewDowntimeSummarizationProcessor(s.reader)
+}

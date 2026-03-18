@@ -44,7 +44,7 @@ func (s *downtime) StopDowntime(ctx context.Context, parameters *models.Downtime
 	return s.executionQueue.ProcessQueue(ctx, s.factory.DowntimeStopProcessor(parameters), logging.Printer("started"), membersPublisher)
 }
 
-func (s *downtime) ListDowntimes(ctx context.Context, parameters *models.DowntimeListParameters) error {
+func (s *downtime) ListDowntimes(ctx context.Context, parameters *models.DowntimeListParameters) (map[string]int, error) {
 	var queuePublisher interfaces.QueuePublisher
 	if parameters.StreamClass == "" {
 		queuePublisher = publisher.NewAllStreamDefinitionsPublisher(s.clientProvider)
@@ -52,5 +52,11 @@ func (s *downtime) ListDowntimes(ctx context.Context, parameters *models.Downtim
 		queuePublisher = publisher.NewStreamClassMembersPublisher(s.clientProvider, parameters.StreamClass, "", filter.NewAllowAll())
 	}
 
-	return s.executionQueue.ProcessQueue(ctx, s.factory.DowntimeSummarizationProcessor(parameters), logging.Printer("started"), queuePublisher)
+	processor := s.factory.DowntimeSummarizationProcessor(parameters)
+	err := s.executionQueue.ProcessQueue(ctx, processor, logging.Printer("started"), queuePublisher)
+	if err != nil {
+		return nil, err
+	}
+
+	return processor.Summaries, nil
 }

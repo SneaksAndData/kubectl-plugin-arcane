@@ -2,13 +2,14 @@ package services
 
 import (
 	"context"
+	"sync"
+	"testing"
+	"time"
+
 	streamapis "github.com/SneaksAndData/arcane-operator/services/controllers/stream"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/models"
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sync"
-	"testing"
-	"time"
 
 	versionedv1 "github.com/SneaksAndData/arcane-operator/pkg/generated/clientset/versioned"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -96,7 +97,7 @@ func Test_StreamStarted(t *testing.T) {
 	name := createTestStreamDefinition(t, false, "15s", true)
 	require.NotEmpty(t, name)
 
-	err := waitForPhase(t, name, streamapis.Suspended)
+	err := waitForPhase(t.Context(), name, streamapis.Suspended)
 	require.NoError(t, err)
 	streamingClientSet := versionedv1.NewForConfigOrDie(kubeConfig)
 
@@ -119,7 +120,7 @@ func Test_StreamStarted(t *testing.T) {
 func Test_StreamStarted_Error(t *testing.T) {
 	name := createTestStreamDefinition(t, false, "5s", false)
 	require.NotEmpty(t, name)
-	err := waitForPhase(t, name, streamapis.Running)
+	err := waitForPhase(t.Context(), name, streamapis.Running)
 	require.NoError(t, err)
 
 	streamingClientSet := versionedv1.NewForConfigOrDie(kubeConfig)
@@ -139,7 +140,7 @@ func Test_StreamStarted_Error(t *testing.T) {
 func Test_StreamStopped(t *testing.T) {
 	name := createTestStreamDefinition(t, false, "15s", false)
 	require.NotEmpty(t, name)
-	err := waitForPhase(t, name, streamapis.Running)
+	err := waitForPhase(t.Context(), name, streamapis.Running)
 	require.NoError(t, err)
 
 	streamingClientSet := versionedv1.NewForConfigOrDie(kubeConfig)
@@ -162,7 +163,7 @@ func Test_StreamStopped(t *testing.T) {
 func Test_StreamStopped_Error(t *testing.T) {
 	name := createTestStreamDefinition(t, false, "15s", true)
 	require.NotEmpty(t, name)
-	err := waitForPhase(t, name, streamapis.Suspended)
+	err := waitForPhase(t.Context(), name, streamapis.Suspended)
 	require.NoError(t, err)
 
 	streamingClientSet := versionedv1.NewForConfigOrDie(kubeConfig)

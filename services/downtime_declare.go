@@ -18,17 +18,17 @@ type downtimeDeclareProcessor struct {
 	streamClass string
 }
 
-func (s *downtimeDeclareProcessor) Process(ctx context.Context, def types.NamespacedName) (*unstructured.Unstructured, error) {
+func (s *downtimeDeclareProcessor) Process(ctx context.Context, def types.NamespacedName) (*unstructured.Unstructured, bool, error) {
 	stream, err := s.reader.Read(ctx, s.streamClass, def)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	labels := stream.GetLabels()
 
 	if existingKey, exists := labels["arcane.sneaksanddata.com/downtime"]; exists && existingKey != s.key {
 		logging.LogError(stream, "already has a different downtime key", err)
-		return nil, nil // Skip items that already have a different downtime key
+		return nil, false, nil // Skip items that already have a different downtime key
 	}
 
 	if labels == nil {
@@ -40,11 +40,11 @@ func (s *downtimeDeclareProcessor) Process(ctx context.Context, def types.Namesp
 
 	definition, err := streamapis.FromUnstructured(stream)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	err = definition.SetSuspended(true)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
-	return definition.ToUnstructured(), nil
+	return definition.ToUnstructured(), true, nil
 }

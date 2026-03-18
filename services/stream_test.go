@@ -7,12 +7,12 @@ import (
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/models"
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	versionedv1 "github.com/SneaksAndData/arcane-operator/pkg/generated/clientset/versioned"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sync"
 	"testing"
 	"time"
+
+	versionedv1 "github.com/SneaksAndData/arcane-operator/pkg/generated/clientset/versioned"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func Test_Backfill(t *testing.T) {

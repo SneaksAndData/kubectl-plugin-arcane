@@ -18,7 +18,7 @@ var _ cmdinterfaces.DowntimeService = (*downtime)(nil)
 type downtime struct {
 	clientProvider cmdinterfaces.ClientProvider
 	factory        *DowntimeProcessorFactory
-	ExecutionQueue interfaces.ExecutionQueue
+	executionQueue interfaces.ExecutionQueue
 }
 
 // NewDowntimeService creates a new instance of the downtime, which provides downtime operations.
@@ -26,7 +26,7 @@ func NewDowntimeService(clientProvider cmdinterfaces.ClientProvider, factory *Do
 	return &downtime{
 		clientProvider: clientProvider,
 		factory:        factory,
-		ExecutionQueue: &DefinitionProcessor{},
+		executionQueue: NewExecutionQueue(clientProvider),
 	}
 }
 
@@ -34,14 +34,14 @@ func NewDowntimeService(clientProvider cmdinterfaces.ClientProvider, factory *Do
 func (s *downtime) DeclareDowntime(ctx context.Context, parameters *models.DowntimeDeclareParameters) error {
 	f := filter.NewUnsuspendedByNamePrefix(parameters.Prefix)
 	membersPublisher := publisher.NewStreamClassMembersPublisher(s.clientProvider, parameters.StreamClass, parameters.Namespace, f)
-	return s.ExecutionQueue.ProcessQueue(ctx, s.factory.DowntimeDeclareProcessor(parameters), logging.Printer("suspended"), membersPublisher)
+	return s.executionQueue.ProcessQueue(ctx, s.factory.DowntimeDeclareProcessor(parameters), logging.Printer("suspended"), membersPublisher)
 }
 
 // StopDowntime is a method that allows users to stop downtime for a stream or a list of streams, use the <key> parameter to identify the stream(s) to resume
 func (s *downtime) StopDowntime(ctx context.Context, parameters *models.DowntimeStopParameters) error {
 	f := filter.NewByDowntimeKey(parameters.DowntimeKey)
 	membersPublisher := publisher.NewStreamClassMembersPublisher(s.clientProvider, parameters.StreamClass, "", f)
-	return s.ExecutionQueue.ProcessQueue(ctx, s.factory.DowntimeStopProcessor(parameters), logging.Printer("started"), membersPublisher)
+	return s.executionQueue.ProcessQueue(ctx, s.factory.DowntimeStopProcessor(parameters), logging.Printer("started"), membersPublisher)
 }
 
 func (s *downtime) ListDowntimes(ctx context.Context, parameters *models.DowntimeListParameters) error {
@@ -52,5 +52,5 @@ func (s *downtime) ListDowntimes(ctx context.Context, parameters *models.Downtim
 		queuePublisher = publisher.NewStreamClassMembersPublisher(s.clientProvider, parameters.StreamClass, "", filter.NewAllowAll())
 	}
 
-	return s.ExecutionQueue.ProcessQueue(ctx, s.factory.DowntimeSummarizationProcessor(parameters), logging.Printer("started"), queuePublisher)
+	return s.executionQueue.ProcessQueue(ctx, s.factory.DowntimeSummarizationProcessor(parameters), logging.Printer("started"), queuePublisher)
 }

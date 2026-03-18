@@ -16,11 +16,17 @@ import (
 // Queue is a typed rate-limiting work queue for unstructured objects.
 type Queue = workqueue.TypedRateLimitingInterface[streamapis.Definition]
 
-type DefinitionProcessor struct {
+type executionQueue struct {
 	clientProvider cmdinterfaces.ClientProvider
 }
 
-func (s *DefinitionProcessor) ProcessQueue(ctx context.Context, process interfaces.UnstructuredProcessor, printer printers.ResourcePrinter, queuePublisher interfaces.QueuePublisher) error {
+func NewExecutionQueue(provider cmdinterfaces.ClientProvider) interfaces.ExecutionQueue {
+	return &executionQueue{
+		clientProvider: provider,
+	}
+}
+
+func (s *executionQueue) ProcessQueue(ctx context.Context, process interfaces.UnstructuredProcessor, printer printers.ResourcePrinter, queuePublisher interfaces.QueuePublisher) error {
 	rateLimiter := workqueue.DefaultTypedControllerRateLimiter[streamapis.Definition]()
 	queue := workqueue.NewTypedRateLimitingQueue[streamapis.Definition](rateLimiter)
 	defer queue.ShutDown()
@@ -40,7 +46,7 @@ func (s *DefinitionProcessor) ProcessQueue(ctx context.Context, process interfac
 	return nil
 }
 
-func (s *DefinitionProcessor) processObjects(ctx context.Context, queue Queue, process interfaces.UnstructuredProcessor, printer printers.ResourcePrinter) {
+func (s *executionQueue) processObjects(ctx context.Context, queue Queue, process interfaces.UnstructuredProcessor, printer printers.ResourcePrinter) {
 	for {
 		select {
 		case <-ctx.Done():

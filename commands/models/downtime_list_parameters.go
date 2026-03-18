@@ -6,7 +6,7 @@ import (
 
 // DowntimeListParameters represents the parameters required to perform a list operation for active downtimes.
 type DowntimeListParameters struct {
-	StreamClass string // The class of the stream to stop.
+	StreamClass string // The optional stream class filter
 }
 
 // NewDowntimeListParameters creates a new instance of StopParameters based on the provided command and arguments.

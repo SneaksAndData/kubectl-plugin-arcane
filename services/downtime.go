@@ -44,7 +44,7 @@ func (s *downtime) StopDowntime(ctx context.Context, parameters *models.Downtime
 	return s.executionQueue.ProcessQueue(ctx, s.factory.DowntimeStopProcessor(parameters), logging.Printer("started"), membersPublisher)
 }
 
-func (s *downtime) ListDowntimes(ctx context.Context, parameters *models.DowntimeListParameters) (map[string]int, error) {
+func (s *downtime) ListDowntimes(ctx context.Context, parameters *models.DowntimeListParameters) (map[string][]string, error) {
 	var queuePublisher interfaces.QueuePublisher
 	if parameters.StreamClass == "" {
 		queuePublisher = publisher.NewAllStreamDefinitionsPublisher(s.clientProvider)

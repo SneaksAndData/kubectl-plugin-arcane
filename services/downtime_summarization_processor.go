@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 
 	v1 "github.com/SneaksAndData/arcane-operator/pkg/apis/streaming/v1"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/services/interfaces"
@@ -13,13 +14,13 @@ var _ interfaces.UnstructuredProcessor = (*DowntimeSummarizationProcessor)(nil)
 
 type DowntimeSummarizationProcessor struct {
 	reader  interfaces.UnstructuredReader
-	Summary map[string]int
+	Summary map[string][]string
 }
 
 func NewDowntimeSummarizationProcessor(reader interfaces.UnstructuredReader) *DowntimeSummarizationProcessor {
 	return &DowntimeSummarizationProcessor{
 		reader:  reader,
-		Summary: make(map[string]int),
+		Summary: make(map[string][]string),
 	}
 }
 
@@ -35,7 +36,8 @@ func (s DowntimeSummarizationProcessor) Process(ctx context.Context, def types.N
 		return nil, false, nil
 	}
 
-	s.Summary[labels["arcane.sneaksanddata.com/downtime"]]++
+	label := labels[interfaces.DowntimeAnnotationKey]
+	s.Summary[label] = append(s.Summary[label], fmt.Sprintf("%s/%s", stream.GetNamespace(), stream.GetName()))
 
 	// We return nil here because we don't want to modify the original object, we just want to update our summaries
 	return nil, false, nil

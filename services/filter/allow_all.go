@@ -9,10 +9,10 @@ var _ interfaces.ObjectFilter = (*AllowAll)(nil)
 
 type AllowAll struct{}
 
-func NewAllowAll() *AllowAll {
+func NewAllowAll() *AllowAll { // coverage-ignore (trivial)
 	return &AllowAll{}
 }
 
-func (a AllowAll) Matches(_ streamapis.Definition) (bool, error) {
+func (a *AllowAll) Matches(_ streamapis.Definition) (bool, error) { // coverage-ignore (trivial)
 	return true, nil
 }

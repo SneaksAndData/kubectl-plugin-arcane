@@ -13,8 +13,15 @@ import (
 var _ interfaces.UnstructuredProcessor = (*DowntimeSummarizationProcessor)(nil)
 
 type DowntimeSummarizationProcessor struct {
-	reader    interfaces.UnstructuredReader
-	Summaries map[string]int
+	reader  interfaces.UnstructuredReader
+	Summary map[string]int
+}
+
+func NewDowntimeSummarizationProcessor(reader interfaces.UnstructuredReader) *DowntimeSummarizationProcessor {
+	return &DowntimeSummarizationProcessor{
+		reader:  reader,
+		Summary: make(map[string]int),
+	}
 }
 
 func (s DowntimeSummarizationProcessor) Process(ctx context.Context, def types.NamespacedName, class *v1.StreamClass) (*unstructured.Unstructured, bool, error) {
@@ -30,7 +37,7 @@ func (s DowntimeSummarizationProcessor) Process(ctx context.Context, def types.N
 		return nil, false, nil // Skip items that have no labels
 	}
 
-	s.Summaries[labels["arcane.sneaksanddata.com/downtime"]]++
+	s.Summary[labels["arcane.sneaksanddata.com/downtime"]]++
 
 	// We return nil here because we don't want to modify the original object, we just want to update our summaries
 	return nil, false, nil

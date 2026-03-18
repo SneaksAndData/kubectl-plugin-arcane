@@ -52,11 +52,11 @@ func (s *downtime) ListDowntimes(ctx context.Context, parameters *models.Downtim
 		queuePublisher = publisher.NewStreamClassMembersPublisher(s.clientProvider, parameters.StreamClass, "", filter.NewAllowAll())
 	}
 
-	processor := s.factory.DowntimeSummarizationProcessor(parameters)
+	processor := s.factory.DowntimeSummarizationProcessor()
 	err := s.executionQueue.ProcessQueue(ctx, processor, logging.Printer("started"), queuePublisher)
 	if err != nil {
 		return nil, err
 	}
 
-	return processor.Summaries, nil
+	return processor.Summary, nil
 }

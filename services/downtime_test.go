@@ -91,9 +91,10 @@ func TestDowntime_StopDowntime(t *testing.T) {
 
 func TestDowntime_List_NoFilter(t *testing.T) {
 	// Arrange
+	const streamCount = 3
 	pattern := "list-downtime-test-"
 
-	for i := range 3 {
+	for i := range streamCount {
 		name := helpers.NewTestStream(t, clientSet, func(def *mockv1.TestStreamDefinition) {
 			def.Labels = map[string]string{
 				"arcane.sneaksanddata.com/downtime": fmt.Sprintf("maintenance-window-%d", i),
@@ -110,8 +111,14 @@ func TestDowntime_List_NoFilter(t *testing.T) {
 	dts, err := downtimeService.ListDowntimes(t.Context(), &models.DowntimeListParameters{
 		StreamClass: "",
 	})
+
 	require.NoError(t, err)
 	require.NotEmpty(t, dts)
+
+	for key, count := range dts {
+		require.Contains(t, key, "maintenance-window-")
+		require.GreaterOrEqual(t, count, 1)
+	}
 }
 
 func createDowntimeService(t *testing.T) cmdinterfaces.DowntimeService {
@@ -121,12 +128,6 @@ func createDowntimeService(t *testing.T) cmdinterfaces.DowntimeService {
 
 	clientProvider := NewFakeClientProvider(streamingClientSet, c)
 	downtimeService := NewDowntimeService(clientProvider, NewDowntimeProcessorFactory(NewUnstructuredReader(clientProvider)))
-
-	err = downtimeService.StopDowntime(t.Context(), &models.DowntimeStopParameters{
-		StreamClass: "arcane-stream-mock",
-		DowntimeKey: "maintenance-window-1",
-	})
-	require.NoError(t, err)
 
 	return downtimeService
 }

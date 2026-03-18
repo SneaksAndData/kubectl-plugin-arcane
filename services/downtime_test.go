@@ -116,7 +116,7 @@ func TestDowntime_List_NoFilter(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, dts)
 
-	for key, count := range dts {
+	for key, count := range dts.CountsRaw() {
 		require.Contains(t, key, "maintenance-window-")
 		require.GreaterOrEqual(t, count, 1)
 	}

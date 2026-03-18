@@ -15,7 +15,7 @@ func NewDowntimeSummary(counts map[string]int) DowntimeSummary {
 	return DowntimeSummary{counts: counts}
 }
 
-func (d DowntimeSummary) Counts() *metav1.Table {
+func (d *DowntimeSummary) Counts() *metav1.Table {
 	table := &metav1.Table{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Table",
@@ -38,4 +38,8 @@ func (d DowntimeSummary) Counts() *metav1.Table {
 	}
 
 	return table
+}
+
+func (d *DowntimeSummary) CountsRaw() map[string]int {
+	return d.counts
 }

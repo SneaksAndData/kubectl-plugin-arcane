@@ -11,11 +11,11 @@ type DowntimeSummary struct {
 	counts map[string]int
 }
 
-func NewDowntimeSummary(counts map[string]int) DowntimeSummary {
-	return DowntimeSummary{counts: counts}
+func NewDowntimeSummary(counts map[string]int) *DowntimeSummary {
+	return &DowntimeSummary{counts: counts}
 }
 
-func (d *DowntimeSummary) Counts() *metav1.Table {
+func (d *DowntimeSummary) Counts() *metav1.Table { // coverage-ignore (tested in integration tests)
 	table := &metav1.Table{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Table",

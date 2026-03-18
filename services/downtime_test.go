@@ -28,7 +28,7 @@ func TestDowntime_DeclareDowntime(t *testing.T) {
 	})
 	require.NotEmpty(t, name)
 
-	err := waitForPhase(t.Context(), name, streamapis.Running)
+	err := waitForPhase(t, name, streamapis.Running)
 	require.NoError(t, err)
 
 	err = WakeUp(t, name)
@@ -48,7 +48,7 @@ func TestDowntime_DeclareDowntime(t *testing.T) {
 	s, err := clientSet.StreamingV1().TestStreamDefinitions("default").Get(t.Context(), name, metav1.GetOptions{})
 	require.NoError(t, err)
 
-	err = waitForPhase(t.Context(), name, streamapis.Suspended)
+	err = waitForPhase(t, name, streamapis.Suspended)
 	require.Contains(t, s.Labels, "arcane.sneaksanddata.com/downtime")
 }
 
@@ -67,7 +67,7 @@ func TestDowntime_StopDowntime(t *testing.T) {
 	})
 	require.NotEmpty(t, name)
 
-	err := waitForPhase(t.Context(), name, streamapis.Suspended)
+	err := waitForPhase(t, name, streamapis.Suspended)
 	require.NoError(t, err)
 
 	downtimeService := createDowntimeService(t)
@@ -80,7 +80,7 @@ func TestDowntime_StopDowntime(t *testing.T) {
 	require.NoError(t, err)
 
 	// Assert
-	err = waitForPhase(t.Context(), name, streamapis.Suspended)
+	err = waitForPhase(t, name, streamapis.Suspended)
 	require.NoError(t, err)
 
 	s, err := clientSet.StreamingV1().TestStreamDefinitions("default").Get(t.Context(), name, metav1.GetOptions{})
@@ -102,7 +102,7 @@ func TestDowntime_List_NoFilter(t *testing.T) {
 			def.GenerateName = pattern
 		})
 		require.NotEmpty(t, name)
-		err := waitForPhase(t.Context(), name, streamapis.Suspended)
+		err := waitForPhase(t, name, streamapis.Suspended)
 		require.NoError(t, err)
 	}
 
@@ -145,5 +145,5 @@ func WakeUp(t *testing.T, name string) error {
 		return err
 	}
 
-	return waitForPhase(t.Context(), name, streamapis.Running)
+	return waitForPhase(t, name, streamapis.Running)
 }

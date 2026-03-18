@@ -97,8 +97,8 @@ func findBackfillRequestByName(ctx context.Context, namespace string, name strin
 	return nil, fmt.Errorf("backfill request for stream %s not found in namespace %s", name, namespace)
 }
 
-func waitForPhase(ctx context.Context, name string, phase streamapis.Phase) error {
-	return wait.PollUntilContextCancel(ctx, 1*time.Second, true, func(ctx context.Context) (done bool, err error) {
+func waitForPhase(t *testing.T, name string, phase streamapis.Phase) error {
+	return wait.PollUntilContextCancel(t.Context(), 1*time.Second, true, func(ctx context.Context) (done bool, err error) {
 		s, err := clientSet.StreamingV1().TestStreamDefinitions("default").Get(ctx, name, metav1.GetOptions{})
 		if err != nil {
 			return false, err

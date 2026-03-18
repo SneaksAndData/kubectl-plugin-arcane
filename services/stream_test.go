@@ -2,9 +2,6 @@ package services
 
 import (
 	"context"
-	"sync"
-	"testing"
-	"time"
 
 	streamapis "github.com/SneaksAndData/arcane-operator/services/controllers/stream"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/models"
@@ -13,6 +10,9 @@ import (
 
 	versionedv1 "github.com/SneaksAndData/arcane-operator/pkg/generated/clientset/versioned"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sync"
+	"testing"
+	"time"
 )
 
 func Test_Backfill(t *testing.T) {

@@ -4,8 +4,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"testing"
-	"time"
 
 	v1 "github.com/SneaksAndData/arcane-operator/pkg/apis/streaming/v1"
 	versionedv1 "github.com/SneaksAndData/arcane-operator/pkg/generated/clientset/versioned"
@@ -20,6 +18,8 @@ import (
 	"k8s.io/klog/v2"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"testing"
+	"time"
 )
 
 var _ interfaces.ClientProvider = (*FakeClientProvider)(nil)
@@ -99,7 +99,7 @@ func findBackfillRequestByName(ctx context.Context, namespace string, name strin
 
 func waitForPhase(t *testing.T, name string, phase streamapis.Phase) error {
 	return wait.PollUntilContextCancel(t.Context(), 1*time.Second, true, func(ctx context.Context) (done bool, err error) {
-		s, err := clientSet.StreamingV1().TestStreamDefinitions("default").Get(ctx, name, metav1.GetOptions{})
+		s, err := clientSet.StreamingV1().TestStreamDefinitions("default").Get(t.Context(), name, metav1.GetOptions{})
 		if err != nil {
 			return false, err
 		}

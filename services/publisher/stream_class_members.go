@@ -77,7 +77,7 @@ func (s StreamClassMembers) PublishStreamDefinitions(ctx context.Context, queue 
 		if !matches {
 			continue
 		}
-		queue.Add(streamDefinition)
+		queue.Add(interfaces.QueueItem{Definition: streamDefinition, Class: sc})
 	}
 
 	return nil

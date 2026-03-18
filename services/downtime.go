@@ -19,9 +19,6 @@ import (
 // Ensure downtime implements cmdinterfaces.DowntimeService
 var _ cmdinterfaces.DowntimeService = (*downtime)(nil)
 
-// Queue is a typed rate-limiting work queue for unstructured objects.
-type Queue = workqueue.TypedRateLimitingInterface[streamapis.Definition]
-
 // UnstructuredObjectFilter is a function that filters unstructured objects based on custom criteria.
 type UnstructuredObjectFilter func(item streamapis.Definition) bool
 
@@ -63,8 +60,8 @@ func (s *downtime) StopDowntime(ctx context.Context, parameters *models.Downtime
 }
 
 func (s *downtime) runWithQueue(ctx context.Context, process interfaces.UnstructuredProcessor, printer printers.ResourcePrinter, queuePublisher interfaces.QueuePublisher) error {
-	rateLimiter := workqueue.DefaultTypedControllerRateLimiter[streamapis.Definition]()
-	queue := workqueue.NewTypedRateLimitingQueue[streamapis.Definition](rateLimiter)
+	rateLimiter := workqueue.DefaultTypedControllerRateLimiter[interfaces.QueueItem]()
+	queue := workqueue.NewTypedRateLimitingQueue[interfaces.QueueItem](rateLimiter)
 	defer queue.ShutDown()
 	var wg sync.WaitGroup
 
@@ -82,7 +79,7 @@ func (s *downtime) runWithQueue(ctx context.Context, process interfaces.Unstruct
 	return nil
 }
 
-func (s *downtime) processObjects(ctx context.Context, queue Queue, process interfaces.UnstructuredProcessor, printer printers.ResourcePrinter) {
+func (s *downtime) processObjects(ctx context.Context, queue interfaces.Queue, process interfaces.UnstructuredProcessor, printer printers.ResourcePrinter) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -93,9 +90,9 @@ func (s *downtime) processObjects(ctx context.Context, queue Queue, process inte
 				return
 			}
 
-			updated, hasUpdated, err := process.Process(ctx, item.NamespacedName())
+			updated, hasUpdated, err := process.Process(ctx, item.Definition.NamespacedName(), item.Class)
 			if err != nil {
-				logging.LogError(item.ToUnstructured(), "modifying object, will retry later", err)
+				logging.LogError(item.Definition.ToUnstructured(), "modifying object, will retry later", err)
 				queue.AddRateLimited(item)
 				continue
 			}
@@ -109,7 +106,7 @@ func (s *downtime) processObjects(ctx context.Context, queue Queue, process inte
 
 			unstructuredClient, err := s.clientProvider.ProvideUnstructuredClient()
 			if err != nil {
-				logging.LogError(item.ToUnstructured(), "in constructing kubernetes client, will not retry", err)
+				logging.LogError(item.Definition.ToUnstructured(), "in constructing kubernetes client, will not retry", err)
 				// If we can't get a client, there's no point in retrying, so we forget the item and move on.
 				queue.Forget(item)
 				queue.Done(item)
@@ -118,7 +115,7 @@ func (s *downtime) processObjects(ctx context.Context, queue Queue, process inte
 
 			err = unstructuredClient.Update(ctx, updated)
 			if err != nil {
-				logging.LogError(item.ToUnstructured(), "updating client, will retry later", err)
+				logging.LogError(item.Definition.ToUnstructured(), "updating client, will retry later", err)
 				queue.AddRateLimited(item)
 				continue
 			}

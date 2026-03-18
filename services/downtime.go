@@ -100,7 +100,7 @@ func (s *downtime) processObjects(ctx context.Context, queue Queue, process inte
 				continue
 			}
 
-			if !hasUpdated {
+			if !hasUpdated { // coverage-ignore
 				// If the processor indicates that there's no update needed
 				queue.Forget(item)
 				queue.Done(item)

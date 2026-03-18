@@ -28,7 +28,7 @@ func TestDowntime_DeclareDowntime(t *testing.T) {
 	})
 	require.NotEmpty(t, name)
 
-	err := waitForPhase(t, name, streamapis.Running)
+	err := waitForPhase(t, name, streamapis.Suspended)
 	require.NoError(t, err)
 
 	err = WakeUp(t, name)

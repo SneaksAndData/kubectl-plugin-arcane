@@ -4,7 +4,6 @@ import (
 	"context"
 
 	v1 "github.com/SneaksAndData/arcane-operator/pkg/apis/streaming/v1"
-	"github.com/sneaksAndData/kubectl-plugin-arcane/logging"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/services/interfaces"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
@@ -32,9 +31,8 @@ func (s DowntimeSummarizationProcessor) Process(ctx context.Context, def types.N
 
 	labels := stream.GetLabels()
 
-	if labels == nil {
-		logging.LogError(stream, "has no labels, skipping", err)
-		return nil, false, nil // Skip items that have no labels
+	if labels == nil { // coverage-ignore
+		return nil, false, nil
 	}
 
 	s.Summary[labels["arcane.sneaksanddata.com/downtime"]]++

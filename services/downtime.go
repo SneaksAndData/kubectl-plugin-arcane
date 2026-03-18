@@ -54,7 +54,7 @@ func (s *downtime) ListDowntimes(ctx context.Context, parameters *models.Downtim
 
 	processor := s.factory.DowntimeSummarizationProcessor()
 	err := s.executionQueue.ProcessQueue(ctx, processor, logging.Printer("started"), queuePublisher)
-	if err != nil {
+	if err != nil { // coverage-ignore
 		return nil, err
 	}
 

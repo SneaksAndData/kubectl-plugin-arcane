@@ -31,9 +31,8 @@ func (s DowntimeProcessorFactory) DowntimeStopProcessor(parameters *models.Downt
 	}
 }
 
-func (s DowntimeProcessorFactory) DowntimeListProcessor(parameters *models.DowntimeListParameters) interfaces.UnstructuredProcessor {
-	return &downtimeStopProcessor{
-		key:         parameters.DowntimeKey,
+func (s DowntimeProcessorFactory) DowntimeSummarizationProcessor(parameters *models.DowntimeListParameters) interfaces.UnstructuredProcessor {
+	return &downtimeSummarizationProcessor{
 		reader:      s.reader,
 		streamClass: parameters.StreamClass,
 	}

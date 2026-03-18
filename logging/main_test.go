@@ -17,4 +17,6 @@ func TestMain(m *testing.M) {
 		"/opt/homebrew/bin/kind get kubeconfig",
 		"Command to execute that outputs kubeconfig YAML content")
 	flag.Parse()
+
+	m.Run()
 }

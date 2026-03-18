@@ -24,7 +24,7 @@ func Test_FormatName(t *testing.T) {
 	require.Len(t, gvks, 1)
 	object.SetGroupVersionKind(gvks[0])
 
-	/// Act
+	// Act
 	str := FormatName(&object)
 
 	// Assert

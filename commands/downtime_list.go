@@ -42,5 +42,8 @@ func NewDowntimeListCommand(ds interfaces.DowntimeService) DowntimeListCommand {
 		},
 	}
 
+	// add --stream-class flag so callers can filter by stream class without positional args
+	cmd.Flags().String("stream-class", "", "Filter by stream class")
+
 	return internal.NewGenericCommand(&cmd)
 }

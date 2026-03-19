@@ -64,7 +64,7 @@ func TestDowntime_StopDowntime(t *testing.T) {
 	name := helpers.NewTestStream(t, clientSet, func(def *mockv1.TestStreamDefinition) {
 		def.Labels = map[string]string{
 			interfaces.DowntimeLabelKey:      "maintenance-window-1",
-			interfaces.DowntimeBeginLabelKey: fmt.Sprintf("maintenance-window-%d", time.Now().UnixMilli()),
+			interfaces.DowntimeBeginLabelKey: fmt.Sprintf("%d", time.Now().UnixMilli()),
 		}
 		def.Spec.RunDuration = "5s"
 		def.Spec.Suspended = true
@@ -105,7 +105,7 @@ func TestDowntime_List_NoFilter(t *testing.T) {
 		name := helpers.NewTestStream(t, clientSet, func(def *mockv1.TestStreamDefinition) {
 			def.Labels = map[string]string{
 				interfaces.DowntimeLabelKey:      fmt.Sprintf("maintenance-window-%d", i),
-				interfaces.DowntimeBeginLabelKey: fmt.Sprintf("maintenance-window-%d", time.Now().UnixMilli()),
+				interfaces.DowntimeBeginLabelKey: fmt.Sprintf("%d", time.Now().UnixMilli()),
 			}
 			def.Spec.Suspended = true
 			def.GenerateName = pattern
@@ -139,7 +139,7 @@ func TestDowntime_Details_NoFilter(t *testing.T) {
 		name := helpers.NewTestStream(t, clientSet, func(def *mockv1.TestStreamDefinition) {
 			def.Labels = map[string]string{
 				interfaces.DowntimeLabelKey:      fmt.Sprintf("details-maintenance-window-%d", i),
-				interfaces.DowntimeBeginLabelKey: fmt.Sprintf("maintenance-window-%d", time.Now().UnixMilli()),
+				interfaces.DowntimeBeginLabelKey: fmt.Sprintf("%d", time.Now().UnixMilli()),
 			}
 			def.Spec.Suspended = true
 			def.GenerateName = pattern

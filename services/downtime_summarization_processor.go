@@ -45,7 +45,7 @@ func (s DowntimeSummarizationProcessor) Process(ctx context.Context, def types.N
 	var ms time.Time
 	annotations := stream.GetAnnotations()
 	if annotations != nil {
-		startDate := annotations[interfaces.DowntimeBeginLabelKey]
+		startDate := annotations[interfaces.DowntimeBeginAnnotationKey]
 		ms, err = time.ParseInLocation(time.RFC3339, startDate, time.UTC)
 		if err != nil {
 			logging.LogError(stream, "to parse downtime start date for stream, skipping", err)

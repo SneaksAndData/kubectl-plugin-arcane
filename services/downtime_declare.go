@@ -43,7 +43,7 @@ func (s *downtimeDeclareProcessor) Process(ctx context.Context, def types.Namesp
 	if annotations == nil {
 		annotations = make(map[string]string)
 	}
-	annotations[interfaces.DowntimeBeginLabelKey] = time.Now().UTC().Format(time.RFC3339)
+	annotations[interfaces.DowntimeBeginAnnotationKey] = time.Now().UTC().Format(time.RFC3339)
 	stream.SetAnnotations(annotations)
 
 	definition, err := streamapis.FromUnstructured(stream)

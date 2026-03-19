@@ -91,7 +91,7 @@ func Test_DowntimeStop(t *testing.T) {
 				interfaces.DowntimeLabelKey: "maintenance-window-1",
 			}
 			def.Annotations = map[string]string{
-				interfaces.DowntimeBeginLabelKey: time.Now().UTC().Format(time.RFC3339),
+				interfaces.DowntimeBeginAnnotationKey: time.Now().UTC().Format(time.RFC3339),
 			}
 			def.Spec.RunDuration = "5s"
 			def.Spec.Suspended = true
@@ -110,7 +110,7 @@ func Test_DowntimeList(t *testing.T) {
 				interfaces.DowntimeLabelKey: "maintenance-window-1",
 			}
 			def.Annotations = map[string]string{
-				interfaces.DowntimeBeginLabelKey: time.Now().UTC().Format(time.RFC3339),
+				interfaces.DowntimeBeginAnnotationKey: time.Now().UTC().Format(time.RFC3339),
 			}
 			def.Spec.RunDuration = "5s"
 			def.Spec.Suspended = true
@@ -129,7 +129,7 @@ func Test_DowntimeDetails(t *testing.T) {
 				interfaces.DowntimeLabelKey: "maintenance-window-1",
 			}
 			def.Annotations = map[string]string{
-				interfaces.DowntimeBeginLabelKey: time.Now().UTC().Format(time.RFC3339),
+				interfaces.DowntimeBeginAnnotationKey: time.Now().UTC().Format(time.RFC3339),
 			}
 			def.Spec.RunDuration = "5s"
 			def.Spec.Suspended = true

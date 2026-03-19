@@ -16,5 +16,5 @@ type DowntimeService interface {
 	StopDowntime(ctx context.Context, parameters *models.DowntimeStopParameters) error
 
 	// ListDowntimes retrieves a list of active downtime keys in the cluster, optionally filtered by stream class.
-	ListDowntimes(ctx context.Context, parameters *models.DowntimeListParameters) (map[string][]string, error)
+	ListDowntimes(ctx context.Context, parameters *models.DowntimeListParameters) (DowntimeSummary, error)
 }

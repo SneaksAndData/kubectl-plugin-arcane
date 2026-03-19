@@ -25,3 +25,7 @@ func FormatName(object PrintableObject) string {
 	groupKind := printers.GetObjectGroupKind(object)
 	return fmt.Sprintf("%s.%s/%s/%s", strings.ToLower(groupKind.Kind), groupKind.Group, object.GetNamespace(), object.GetName())
 }
+
+func TablePrinter() printers.ResourcePrinter {
+	return printers.NewTablePrinter(printers.PrintOptions{})
+}

@@ -114,6 +114,22 @@ func Test_DowntimeList(t *testing.T) {
 	)
 }
 
+func Test_DowntimeDetails(t *testing.T) {
+	runIntegrationTest(t,
+		func(def *mockv1.TestStreamDefinition) {
+			def.Namespace = "integration-tests"
+			def.Labels = map[string]string{
+				interfaces.DowntimeAnnotationKey: "maintenance-window-1",
+			}
+			def.Spec.RunDuration = "5s"
+			def.Spec.Suspended = true
+			def.Spec.ShouldFail = false
+			def.GenerateName = "integration-downtime-details-"
+		},
+		"kubectl arcane downtime details",
+	)
+}
+
 var (
 	clientSet     *mockversionedv1.Clientset
 	kubeconfigCmd string

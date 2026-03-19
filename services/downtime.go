@@ -60,3 +60,20 @@ func (s *downtime) ListDowntimes(ctx context.Context, parameters *models.Downtim
 
 	return NewDowntimeSummary(processor.Summary), nil
 }
+
+func (s *downtime) GetDowntimeDetails(ctx context.Context, parameters *models.DowntimeDetailsParameters) (cmdinterfaces.DowntimeSummary, error) {
+	var queuePublisher interfaces.QueuePublisher
+	if parameters.StreamClass == "" {
+		queuePublisher = publisher.NewAllStreamDefinitionsPublisher(s.clientProvider)
+	} else {
+		queuePublisher = publisher.NewStreamClassMembersPublisher(s.clientProvider, parameters.StreamClass, "", filter.NewAllowAll())
+	}
+
+	processor := s.factory.DowntimeSummarizationProcessor()
+	err := s.executionQueue.ProcessQueue(ctx, processor, logging.Printer("started"), queuePublisher)
+	if err != nil { // coverage-ignore
+		return nil, err
+	}
+
+	return NewDowntimeSummary(processor.Summary), nil
+}

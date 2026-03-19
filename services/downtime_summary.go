@@ -27,11 +27,11 @@ func (d *DowntimeSummary) Counts() *metav1.Table { // coverage-ignore (tested in
 		},
 	}
 
-	for key, count := range d.groupedByKey {
+	for key, streams := range d.groupedByKey {
 		row := metav1.TableRow{
 			Cells: []interface{}{
 				key,
-				count,
+				len(streams),
 			},
 		}
 		table.Rows = append(table.Rows, row)

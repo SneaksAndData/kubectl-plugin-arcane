@@ -111,7 +111,7 @@ func TestDowntime_List_NoFilter(t *testing.T) {
 	}
 
 	downtimeService := createDowntimeService(t)
-	dts, err := downtimeService.ListDowntimes(t.Context(), &models.DowntimeListParameters{
+	dts, err := downtimeService.GetSummary(t.Context(), &models.DowntimeSummaryParameters{
 		StreamClass: "",
 	})
 
@@ -144,7 +144,7 @@ func TestDowntime_Details_NoFilter(t *testing.T) {
 	}
 
 	downtimeService := createDowntimeService(t)
-	dts, err := downtimeService.ListDowntimes(t.Context(), &models.DowntimeListParameters{
+	dts, err := downtimeService.GetSummary(t.Context(), &models.DowntimeSummaryParameters{
 		StreamClass: "",
 	})
 

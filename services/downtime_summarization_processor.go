@@ -3,8 +3,11 @@ package services
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"time"
 
 	v1 "github.com/SneaksAndData/arcane-operator/pkg/apis/streaming/v1"
+	"github.com/sneaksAndData/kubectl-plugin-arcane/logging"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/services/interfaces"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
@@ -13,8 +16,9 @@ import (
 var _ interfaces.UnstructuredProcessor = (*DowntimeSummarizationProcessor)(nil)
 
 type DowntimeSummarizationProcessor struct {
-	reader  interfaces.UnstructuredReader
-	Summary map[string][]string
+	reader    interfaces.UnstructuredReader
+	Summary   map[string][]string
+	Durations map[string][]time.Time
 }
 
 func NewDowntimeSummarizationProcessor(reader interfaces.UnstructuredReader) *DowntimeSummarizationProcessor {
@@ -37,7 +41,17 @@ func (s DowntimeSummarizationProcessor) Process(ctx context.Context, def types.N
 	}
 
 	label := labels[interfaces.DowntimeLabelKey]
-	s.Summary[label] = append(s.Summary[label], fmt.Sprintf("%s/%s", stream.GetNamespace(), stream.GetName()))
+	startDate := labels[interfaces.DowntimeBeginLabelKey]
+	ms, err := strconv.ParseInt(startDate, 10, 64)
+	if err != nil {
+		logging.LogError(stream, "to parse downtime start date for stream, skipping", err)
+		ms = 0 // Default to epoch if parsing fails, so it appears at the beginning of the summary
+	}
+	// Go 1.17+:
+	startTime := time.UnixMilli(ms)
+	streamId := fmt.Sprintf("%s/%s", stream.GetNamespace(), stream.GetName())
+	s.Summary[label] = append(s.Summary[label], streamId)
+	s.Durations[streamId] = append(s.Durations[streamId], startTime)
 
 	// We return nil here because we don't want to modify the original object, we just want to update our summaries
 	return nil, false, nil

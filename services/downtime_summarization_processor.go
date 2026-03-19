@@ -18,13 +18,14 @@ var _ interfaces.UnstructuredProcessor = (*DowntimeSummarizationProcessor)(nil)
 type DowntimeSummarizationProcessor struct {
 	reader    interfaces.UnstructuredReader
 	Summary   map[string][]string
-	Durations map[string][]time.Time
+	Durations map[string]time.Time
 }
 
 func NewDowntimeSummarizationProcessor(reader interfaces.UnstructuredReader) *DowntimeSummarizationProcessor {
 	return &DowntimeSummarizationProcessor{
-		reader:  reader,
-		Summary: make(map[string][]string),
+		reader:    reader,
+		Summary:   make(map[string][]string),
+		Durations: make(map[string]time.Time),
 	}
 }
 
@@ -51,7 +52,7 @@ func (s DowntimeSummarizationProcessor) Process(ctx context.Context, def types.N
 	startTime := time.UnixMilli(ms)
 	streamId := fmt.Sprintf("%s/%s", stream.GetNamespace(), stream.GetName())
 	s.Summary[label] = append(s.Summary[label], streamId)
-	s.Durations[streamId] = append(s.Durations[streamId], startTime)
+	s.Durations[streamId] = startTime
 
 	// We return nil here because we don't want to modify the original object, we just want to update our summaries
 	return nil, false, nil

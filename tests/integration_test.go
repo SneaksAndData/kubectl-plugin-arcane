@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	mockv1 "github.com/SneaksAndData/arcane-stream-mock/pkg/apis/streaming/v1"
 	mockversionedv1 "github.com/SneaksAndData/arcane-stream-mock/pkg/generated/clientset/versioned"
@@ -87,7 +88,8 @@ func Test_DowntimeStop(t *testing.T) {
 		func(def *mockv1.TestStreamDefinition) {
 			def.Namespace = "integration-tests"
 			def.Labels = map[string]string{
-				interfaces.DowntimeLabelKey: "maintenance-window-1",
+				interfaces.DowntimeLabelKey:      "maintenance-window-1",
+				interfaces.DowntimeBeginLabelKey: fmt.Sprintf("maintenance-window-%d", time.Now().UnixMilli()),
 			}
 			def.Spec.RunDuration = "5s"
 			def.Spec.Suspended = true
@@ -103,7 +105,8 @@ func Test_DowntimeList(t *testing.T) {
 		func(def *mockv1.TestStreamDefinition) {
 			def.Namespace = "integration-tests"
 			def.Labels = map[string]string{
-				interfaces.DowntimeLabelKey: "maintenance-window-1",
+				interfaces.DowntimeLabelKey:      "maintenance-window-1",
+				interfaces.DowntimeBeginLabelKey: fmt.Sprintf("maintenance-window-%d", time.Now().UnixMilli()),
 			}
 			def.Spec.RunDuration = "5s"
 			def.Spec.Suspended = true

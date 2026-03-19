@@ -8,11 +8,11 @@ import (
 var _ interfaces.DowntimeSummary = (*DowntimeSummary)(nil)
 
 type DowntimeSummary struct {
-	counts map[string]int
+	groupedByKey map[string][]string
 }
 
-func NewDowntimeSummary(counts map[string]int) *DowntimeSummary {
-	return &DowntimeSummary{counts: counts}
+func NewDowntimeSummary(counts map[string][]string) *DowntimeSummary {
+	return &DowntimeSummary{groupedByKey: counts}
 }
 
 func (d *DowntimeSummary) Counts() *metav1.Table { // coverage-ignore (tested in integration tests)
@@ -27,7 +27,7 @@ func (d *DowntimeSummary) Counts() *metav1.Table { // coverage-ignore (tested in
 		},
 	}
 
-	for key, count := range d.counts {
+	for key, count := range d.groupedByKey {
 		row := metav1.TableRow{
 			Cells: []interface{}{
 				key,
@@ -41,5 +41,10 @@ func (d *DowntimeSummary) Counts() *metav1.Table { // coverage-ignore (tested in
 }
 
 func (d *DowntimeSummary) CountsRaw() map[string]int {
-	return d.counts
+	counts := make(map[string]int)
+	for key, items := range d.groupedByKey {
+		counts[key] = len(items)
+	}
+
+	return counts
 }

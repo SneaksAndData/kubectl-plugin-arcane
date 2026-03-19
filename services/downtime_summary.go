@@ -36,7 +36,7 @@ func (d *DowntimeSummary) Counts() *metav1.Table { // coverage-ignore (tested in
 			Cells: []interface{}{
 				key,
 				len(streams),
-				time.Now().Sub(d.durations[key]).String(),
+				time.Since(d.durations[key]).String(),
 			},
 		}
 		table.Rows = append(table.Rows, row)

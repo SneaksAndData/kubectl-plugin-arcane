@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"strconv"
 	"time"
 
 	v1 "github.com/SneaksAndData/arcane-operator/pkg/apis/streaming/v1"
@@ -38,7 +37,7 @@ func (s *downtimeDeclareProcessor) Process(ctx context.Context, def types.Namesp
 	}
 
 	labels[interfaces.DowntimeLabelKey] = s.key
-	labels[interfaces.DowntimeBeginLabelKey] = strconv.FormatInt(time.Now().UnixMilli(), 10)
+	labels[interfaces.DowntimeBeginLabelKey] = time.Now().UTC().Format(time.RFC3339)
 	stream.SetLabels(labels)
 
 	definition, err := streamapis.FromUnstructured(stream)

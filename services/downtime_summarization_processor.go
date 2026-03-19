@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"time"
 
 	v1 "github.com/SneaksAndData/arcane-operator/pkg/apis/streaming/v1"
@@ -42,17 +41,28 @@ func (s DowntimeSummarizationProcessor) Process(ctx context.Context, def types.N
 	}
 
 	label := labels[interfaces.DowntimeLabelKey]
-	startDate := labels[interfaces.DowntimeBeginLabelKey]
-	ms, err := strconv.ParseInt(startDate, 10, 64)
-	if err != nil {
+
+	var ms time.Time
+	annotations := stream.GetAnnotations()
+	if annotations != nil {
+		startDate := annotations[interfaces.DowntimeBeginLabelKey]
+		ms, err = time.ParseInLocation(time.RFC3339, startDate, time.UTC)
+		if err != nil {
+			logging.LogError(stream, "to parse downtime start date for stream, skipping", err)
+			ms = time.Now().UTC()
+		}
+	} else {
 		logging.LogError(stream, "to parse downtime start date for stream, skipping", err)
-		ms = 0 // Default to epoch if parsing fails, so it appears at the beginning of the summary
+		ms = time.Now().UTC()
 	}
 	// Go 1.17+:
-	startTime := time.UnixMilli(ms)
 	streamId := fmt.Sprintf("%s/%s", stream.GetNamespace(), stream.GetName())
 	s.Summary[label] = append(s.Summary[label], streamId)
-	s.Durations[streamId] = startTime
+
+	// We want to keep the earliest downtime start time for each key
+	if prev, ok := s.Durations[label]; !ok || ms.Before(prev) {
+		s.Durations[label] = ms
+	}
 
 	// We return nil here because we don't want to modify the original object, we just want to update our summaries
 	return nil, false, nil

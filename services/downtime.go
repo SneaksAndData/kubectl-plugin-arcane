@@ -58,5 +58,5 @@ func (s *downtime) GetSummary(ctx context.Context, parameters *models.DowntimeSu
 		return nil, err
 	}
 
-	return NewDowntimeSummary(processor.Summary), nil
+	return NewDowntimeSummary(processor.Summary, processor.Durations), nil
 }

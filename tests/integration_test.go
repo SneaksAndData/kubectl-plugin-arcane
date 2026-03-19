@@ -88,8 +88,10 @@ func Test_DowntimeStop(t *testing.T) {
 		func(def *mockv1.TestStreamDefinition) {
 			def.Namespace = "integration-tests"
 			def.Labels = map[string]string{
-				interfaces.DowntimeLabelKey:      "maintenance-window-1",
-				interfaces.DowntimeBeginLabelKey: fmt.Sprintf("%d", time.Now().UnixMilli()),
+				interfaces.DowntimeLabelKey: "maintenance-window-1",
+			}
+			def.Annotations = map[string]string{
+				interfaces.DowntimeBeginLabelKey: time.Now().UTC().Format(time.RFC3339),
 			}
 			def.Spec.RunDuration = "5s"
 			def.Spec.Suspended = true
@@ -105,8 +107,10 @@ func Test_DowntimeList(t *testing.T) {
 		func(def *mockv1.TestStreamDefinition) {
 			def.Namespace = "integration-tests"
 			def.Labels = map[string]string{
-				interfaces.DowntimeLabelKey:      "maintenance-window-1",
-				interfaces.DowntimeBeginLabelKey: fmt.Sprintf("%d", time.Now().UnixMilli()),
+				interfaces.DowntimeLabelKey: "maintenance-window-1",
+			}
+			def.Annotations = map[string]string{
+				interfaces.DowntimeBeginLabelKey: time.Now().UTC().Format(time.RFC3339),
 			}
 			def.Spec.RunDuration = "5s"
 			def.Spec.Suspended = true
@@ -122,8 +126,10 @@ func Test_DowntimeDetails(t *testing.T) {
 		func(def *mockv1.TestStreamDefinition) {
 			def.Namespace = "integration-tests"
 			def.Labels = map[string]string{
-				interfaces.DowntimeLabelKey:      "maintenance-window-1",
-				interfaces.DowntimeBeginLabelKey: fmt.Sprintf("%d", time.Now().UnixMilli()),
+				interfaces.DowntimeLabelKey: "maintenance-window-1",
+			}
+			def.Annotations = map[string]string{
+				interfaces.DowntimeBeginLabelKey: time.Now().UTC().Format(time.RFC3339),
 			}
 			def.Spec.RunDuration = "5s"
 			def.Spec.Suspended = true

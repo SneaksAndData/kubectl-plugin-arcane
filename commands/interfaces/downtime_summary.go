@@ -17,4 +17,7 @@ type DowntimeService interface {
 
 	// ListDowntimes retrieves a list of active downtime keys in the cluster, optionally filtered by stream class.
 	ListDowntimes(ctx context.Context, parameters *models.DowntimeListParameters) (DowntimeSummary, error)
+
+	// GetDowntimeDetails retrieves a list of active downtime keys in the cluster, optionally filtered by stream class.
+	GetDowntimeDetails(ctx context.Context, parameters *models.DowntimeDetailsParameters) (DowntimeSummary, error)
 }

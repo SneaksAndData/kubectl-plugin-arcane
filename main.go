@@ -33,6 +33,7 @@ func main() {
 		fx.Provide(services.NewDowntimeProcessorFactory),
 		fx.Provide(services.NewUnstructuredReader),
 		fx.Provide(commands.NewDowntimeListCommand),
+		fx.Provide(commands.NewDowntimeDetailsCommand),
 		fx.NopLogger,
 		fx.Invoke(
 			func(rootCmd commands.RootCommand, shutDowner fx.Shutdowner, lifeCycle fx.Lifecycle) error {

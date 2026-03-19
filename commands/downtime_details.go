@@ -10,17 +10,17 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// DowntimeListCommand is a command to list active downtime keys in the cluster, optionally filtered by stream class
-type DowntimeListCommand interface {
+// DowntimeDetailsCommand is a command to list active downtime keys in the cluster, optionally filtered by stream class
+type DowntimeDetailsCommand interface {
 	internal.GenericCommand
 }
 
-// NewDowntimeListCommand creates a new instance of the DowntimeListCommand, which allows users to stop downtime for a stream or a list of streams.
-func NewDowntimeListCommand(ds interfaces.DowntimeService) DowntimeListCommand { // coverage-ignore (tested by integration tests)
+// NewDowntimeDetailsCommand creates a new instance of the DowntimeDetailsCommand, which allows users to stop downtime for a stream or a list of streams.
+func NewDowntimeDetailsCommand(ds interfaces.DowntimeService) DowntimeDetailsCommand { // coverage-ignore (tested by integration tests)
 	cmd := cobra.Command{
-		Use:   "list",
+		Use:   "details",
 		Args:  cobra.NoArgs,
-		Short: "List of active downtime keys in the cluster, optionally filtered by stream class",
+		Short: "List of active downtime keys in the cluster and the streams associated with each key",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			parameters, err := models.NewDowntimeSummaryParameters(cmd)
@@ -33,7 +33,7 @@ func NewDowntimeListCommand(ds interfaces.DowntimeService) DowntimeListCommand {
 				return err
 			}
 
-			err = logging.TablePrinter().PrintObj(dts.Counts(), os.Stdout)
+			err = logging.TablePrinter().PrintObj(dts.Details(), os.Stdout)
 			if err != nil {
 				return err
 			}

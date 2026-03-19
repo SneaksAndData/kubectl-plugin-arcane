@@ -48,3 +48,34 @@ func (d *DowntimeSummary) CountsRaw() map[string]int {
 
 	return counts
 }
+
+func (d *DowntimeSummary) Details() *metav1.Table { // coverage-ignore (tested in integration tests)
+	table := &metav1.Table{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Table",
+			APIVersion: "meta.k8s.io/v1",
+		},
+		ColumnDefinitions: []metav1.TableColumnDefinition{
+			{Name: "Downtime Key", Type: "string"},
+			{Name: "Stream Name", Type: "string"},
+		},
+	}
+
+	for key, streams := range d.groupedByKey {
+		for _, stream := range streams {
+			row := metav1.TableRow{
+				Cells: []interface{}{
+					key,
+					stream,
+				},
+			}
+			table.Rows = append(table.Rows, row)
+		}
+	}
+
+	return table
+}
+
+func (d *DowntimeSummary) DetailsRaw() map[string][]string {
+	return d.groupedByKey
+}

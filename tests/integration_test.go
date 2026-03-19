@@ -4,15 +4,17 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	mockv1 "github.com/SneaksAndData/arcane-stream-mock/pkg/apis/streaming/v1"
-	mockversionedv1 "github.com/SneaksAndData/arcane-stream-mock/pkg/generated/clientset/versioned"
-	"github.com/sneaksAndData/kubectl-plugin-arcane/tests/helpers"
-	"github.com/stretchr/testify/require"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	mockv1 "github.com/SneaksAndData/arcane-stream-mock/pkg/apis/streaming/v1"
+	mockversionedv1 "github.com/SneaksAndData/arcane-stream-mock/pkg/generated/clientset/versioned"
+	"github.com/sneaksAndData/kubectl-plugin-arcane/services/interfaces"
+	"github.com/sneaksAndData/kubectl-plugin-arcane/tests/helpers"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_Start(t *testing.T) {
@@ -85,7 +87,7 @@ func Test_DowntimeStop(t *testing.T) {
 		func(def *mockv1.TestStreamDefinition) {
 			def.Namespace = "integration-tests"
 			def.Labels = map[string]string{
-				"arcane.sneaksanddata.com/downtime": "maintenance-window-1",
+				interfaces.DowntimeAnnotationKey: "maintenance-window-1",
 			}
 			def.Spec.RunDuration = "5s"
 			def.Spec.Suspended = true

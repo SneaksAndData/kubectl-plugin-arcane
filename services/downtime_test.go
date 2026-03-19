@@ -9,6 +9,7 @@ import (
 	mockv1 "github.com/SneaksAndData/arcane-stream-mock/pkg/apis/streaming/v1"
 	cmdinterfaces "github.com/sneaksAndData/kubectl-plugin-arcane/commands/interfaces"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/models"
+	"github.com/sneaksAndData/kubectl-plugin-arcane/services/interfaces"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/tests/helpers"
 	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -50,7 +51,7 @@ func TestDowntime_DeclareDowntime(t *testing.T) {
 
 	err = waitForPhase(t, name, streamapis.Suspended)
 	require.NoError(t, err)
-	require.Contains(t, s.Labels, "arcane.sneaksanddata.com/downtime")
+	require.Contains(t, s.Labels, interfaces.DowntimeAnnotationKey)
 }
 
 func TestDowntime_StopDowntime(t *testing.T) {
@@ -59,7 +60,7 @@ func TestDowntime_StopDowntime(t *testing.T) {
 
 	name := helpers.NewTestStream(t, clientSet, func(def *mockv1.TestStreamDefinition) {
 		def.Labels = map[string]string{
-			"arcane.sneaksanddata.com/downtime": "maintenance-window-1",
+			interfaces.DowntimeAnnotationKey: "maintenance-window-1",
 		}
 		def.Spec.RunDuration = "5s"
 		def.Spec.Suspended = true
@@ -86,7 +87,7 @@ func TestDowntime_StopDowntime(t *testing.T) {
 
 	s, err := clientSet.StreamingV1().TestStreamDefinitions("default").Get(t.Context(), name, metav1.GetOptions{})
 	require.NoError(t, err)
-	require.NotContains(t, s.Annotations, "arcane.sneaksanddata.com/downtime")
+	require.NotContains(t, s.Annotations, interfaces.DowntimeAnnotationKey)
 	require.False(t, s.Spec.Suspended)
 }
 
@@ -98,7 +99,7 @@ func TestDowntime_List_NoFilter(t *testing.T) {
 	for i := range streamCount {
 		name := helpers.NewTestStream(t, clientSet, func(def *mockv1.TestStreamDefinition) {
 			def.Labels = map[string]string{
-				"arcane.sneaksanddata.com/downtime": fmt.Sprintf("maintenance-window-%d", i),
+				interfaces.DowntimeAnnotationKey: fmt.Sprintf("maintenance-window-%d", i),
 			}
 			def.Spec.Suspended = true
 			def.GenerateName = pattern

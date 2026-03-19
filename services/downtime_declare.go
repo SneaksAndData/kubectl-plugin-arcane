@@ -26,7 +26,7 @@ func (s *downtimeDeclareProcessor) Process(ctx context.Context, def types.Namesp
 
 	labels := stream.GetLabels()
 
-	if existingKey, exists := labels["arcane.sneaksanddata.com/downtime"]; exists && existingKey != s.key {
+	if existingKey, exists := labels[interfaces.DowntimeAnnotationKey]; exists && existingKey != s.key {
 		logging.LogError(stream, "already has a different downtime key", err)
 		return nil, false, nil // Skip items that already have a different downtime key
 	}
@@ -35,7 +35,7 @@ func (s *downtimeDeclareProcessor) Process(ctx context.Context, def types.Namesp
 		labels = make(map[string]string)
 	}
 
-	labels["arcane.sneaksanddata.com/downtime"] = s.key
+	labels[interfaces.DowntimeAnnotationKey] = s.key
 	stream.SetLabels(labels)
 
 	definition, err := streamapis.FromUnstructured(stream)

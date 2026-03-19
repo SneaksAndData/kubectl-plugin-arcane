@@ -15,4 +15,7 @@ type DowntimeSummary interface {
 
 	// Details returns a table containing detailed information about individual downtime events, including relevant metadata and annotations.
 	Details() *v1.Table
+
+	// DetailsRaw returns a raw map of downtime event details, categorized by relevant criteria, without any formatting.
+	DetailsRaw() map[string][]string
 }

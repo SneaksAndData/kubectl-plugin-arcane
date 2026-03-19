@@ -75,3 +75,7 @@ func (d *DowntimeSummary) Details() *metav1.Table { // coverage-ignore (tested i
 
 	return table
 }
+
+func (d *DowntimeSummary) DetailsRaw() map[string][]string {
+	return d.groupedByKey
+}

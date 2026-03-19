@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	versionedv1 "github.com/SneaksAndData/arcane-operator/pkg/generated/clientset/versioned"
@@ -118,8 +119,42 @@ func TestDowntime_List_NoFilter(t *testing.T) {
 	require.NotEmpty(t, dts)
 
 	for key, count := range dts.CountsRaw() {
-		require.Contains(t, key, "maintenance-window-")
-		require.GreaterOrEqual(t, count, 1)
+		if strings.HasPrefix(key, "maintenance-window-") {
+			require.GreaterOrEqual(t, count, 1)
+		}
+	}
+}
+
+func TestDowntime_Details_NoFilter(t *testing.T) {
+	// Arrange
+	const streamCount = 3
+	pattern := "details-downtime-test-"
+
+	for i := range streamCount {
+		name := helpers.NewTestStream(t, clientSet, func(def *mockv1.TestStreamDefinition) {
+			def.Labels = map[string]string{
+				interfaces.DowntimeAnnotationKey: fmt.Sprintf("details-maintenance-window-%d", i),
+			}
+			def.Spec.Suspended = true
+			def.GenerateName = pattern
+		})
+		require.NotEmpty(t, name)
+		err := waitForPhase(t, name, streamapis.Suspended)
+		require.NoError(t, err)
+	}
+
+	downtimeService := createDowntimeService(t)
+	dts, err := downtimeService.ListDowntimes(t.Context(), &models.DowntimeListParameters{
+		StreamClass: "",
+	})
+
+	require.NoError(t, err)
+	require.NotEmpty(t, dts)
+
+	for key, count := range dts.DetailsRaw() {
+		if strings.HasPrefix(key, "details-maintenance-window-") {
+			require.GreaterOrEqual(t, len(count), 1)
+		}
 	}
 }
 

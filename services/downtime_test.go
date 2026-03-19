@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	versionedv1 "github.com/SneaksAndData/arcane-operator/pkg/generated/clientset/versioned"
 	streamapis "github.com/SneaksAndData/arcane-operator/services/controllers/stream"
@@ -52,7 +53,8 @@ func TestDowntime_DeclareDowntime(t *testing.T) {
 
 	err = waitForPhase(t, name, streamapis.Suspended)
 	require.NoError(t, err)
-	require.Contains(t, s.Labels, interfaces.DowntimeAnnotationKey)
+	require.Contains(t, s.Labels, interfaces.DowntimeLabelKey)
+	require.Contains(t, s.Labels, interfaces.DowntimeBeginLabelKey)
 }
 
 func TestDowntime_StopDowntime(t *testing.T) {
@@ -61,7 +63,8 @@ func TestDowntime_StopDowntime(t *testing.T) {
 
 	name := helpers.NewTestStream(t, clientSet, func(def *mockv1.TestStreamDefinition) {
 		def.Labels = map[string]string{
-			interfaces.DowntimeAnnotationKey: "maintenance-window-1",
+			interfaces.DowntimeLabelKey:      "maintenance-window-1",
+			interfaces.DowntimeBeginLabelKey: fmt.Sprintf("maintenance-window-%d", time.Now().UnixMilli()),
 		}
 		def.Spec.RunDuration = "5s"
 		def.Spec.Suspended = true
@@ -88,7 +91,8 @@ func TestDowntime_StopDowntime(t *testing.T) {
 
 	s, err := clientSet.StreamingV1().TestStreamDefinitions("default").Get(t.Context(), name, metav1.GetOptions{})
 	require.NoError(t, err)
-	require.NotContains(t, s.Annotations, interfaces.DowntimeAnnotationKey)
+	require.NotContains(t, s.Annotations, interfaces.DowntimeLabelKey)
+	require.NotContains(t, s.Annotations, interfaces.DowntimeBeginLabelKey)
 	require.False(t, s.Spec.Suspended)
 }
 
@@ -100,7 +104,8 @@ func TestDowntime_List_NoFilter(t *testing.T) {
 	for i := range streamCount {
 		name := helpers.NewTestStream(t, clientSet, func(def *mockv1.TestStreamDefinition) {
 			def.Labels = map[string]string{
-				interfaces.DowntimeAnnotationKey: fmt.Sprintf("maintenance-window-%d", i),
+				interfaces.DowntimeLabelKey:      fmt.Sprintf("maintenance-window-%d", i),
+				interfaces.DowntimeBeginLabelKey: fmt.Sprintf("maintenance-window-%d", time.Now().UnixMilli()),
 			}
 			def.Spec.Suspended = true
 			def.GenerateName = pattern
@@ -133,7 +138,8 @@ func TestDowntime_Details_NoFilter(t *testing.T) {
 	for i := range streamCount {
 		name := helpers.NewTestStream(t, clientSet, func(def *mockv1.TestStreamDefinition) {
 			def.Labels = map[string]string{
-				interfaces.DowntimeAnnotationKey: fmt.Sprintf("details-maintenance-window-%d", i),
+				interfaces.DowntimeLabelKey:      fmt.Sprintf("details-maintenance-window-%d", i),
+				interfaces.DowntimeBeginLabelKey: fmt.Sprintf("maintenance-window-%d", time.Now().UnixMilli()),
 			}
 			def.Spec.Suspended = true
 			def.GenerateName = pattern

@@ -36,7 +36,7 @@ func (s DowntimeSummarizationProcessor) Process(ctx context.Context, def types.N
 		return nil, false, nil
 	}
 
-	label := labels[interfaces.DowntimeAnnotationKey]
+	label := labels[interfaces.DowntimeLabelKey]
 	s.Summary[label] = append(s.Summary[label], fmt.Sprintf("%s/%s", stream.GetNamespace(), stream.GetName()))
 
 	// We return nil here because we don't want to modify the original object, we just want to update our summaries

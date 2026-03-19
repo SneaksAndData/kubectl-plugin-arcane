@@ -2,6 +2,8 @@ package services
 
 import (
 	"context"
+	"strconv"
+	"time"
 
 	v1 "github.com/SneaksAndData/arcane-operator/pkg/apis/streaming/v1"
 	streamapis "github.com/SneaksAndData/arcane-operator/services/controllers/stream"
@@ -26,7 +28,7 @@ func (s *downtimeDeclareProcessor) Process(ctx context.Context, def types.Namesp
 
 	labels := stream.GetLabels()
 
-	if existingKey, exists := labels[interfaces.DowntimeAnnotationKey]; exists && existingKey != s.key {
+	if existingKey, exists := labels[interfaces.DowntimeLabelKey]; exists && existingKey != s.key {
 		logging.LogError(stream, "already has a different downtime key", err)
 		return nil, false, nil // Skip items that already have a different downtime key
 	}
@@ -35,7 +37,8 @@ func (s *downtimeDeclareProcessor) Process(ctx context.Context, def types.Namesp
 		labels = make(map[string]string)
 	}
 
-	labels[interfaces.DowntimeAnnotationKey] = s.key
+	labels[interfaces.DowntimeLabelKey] = s.key
+	labels[interfaces.DowntimeBeginLabelKey] = strconv.FormatInt(time.Now().UnixMilli(), 10)
 	stream.SetLabels(labels)
 
 	definition, err := streamapis.FromUnstructured(stream)

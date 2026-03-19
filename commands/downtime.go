@@ -11,7 +11,11 @@ type DowntimeCommand interface {
 }
 
 // NewDowntimeCommand creates a new instance of the DowntimeCommand, which includes the declare and stop subcommands.
-func NewDowntimeCommand(command DowntimeDeclareCommand, stopCommand DowntimeStopCommand, listCommand DowntimeListCommand) DowntimeCommand { // coverage-ignore (trivial)
+func NewDowntimeCommand(command DowntimeDeclareCommand,
+	stopCommand DowntimeStopCommand,
+	listCommand DowntimeListCommand,
+	detailsCommand DowntimeDetailsCommand) DowntimeCommand { // coverage-ignore (trivial)
+
 	cmd := cobra.Command{
 		Use:   "downtime",
 		Short: "Temporarily stop or start a stream or a list of streams",
@@ -19,5 +23,6 @@ func NewDowntimeCommand(command DowntimeDeclareCommand, stopCommand DowntimeStop
 	cmd.AddCommand(command.GetCommand())
 	cmd.AddCommand(stopCommand.GetCommand())
 	cmd.AddCommand(listCommand.GetCommand())
+	cmd.AddCommand(detailsCommand.GetCommand())
 	return internal.NewGenericCommand(&cmd)
 }

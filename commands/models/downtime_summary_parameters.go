@@ -9,8 +9,8 @@ type DowntimeSummaryParameters struct {
 	StreamClass string // The optional stream class filter
 }
 
-// NewDowntimeListParameters creates a new instance of StopParameters based on the provided command and arguments.
-func NewDowntimeListParameters(cmd *cobra.Command) (*DowntimeSummaryParameters, error) { // coverage-ignore (tested in integration tests)
+// NewDowntimeSummaryParameters creates a new instance of StopParameters based on the provided command and arguments.
+func NewDowntimeSummaryParameters(cmd *cobra.Command) (*DowntimeSummaryParameters, error) { // coverage-ignore (tested in integration tests)
 	streamClass, err := cmd.Flags().GetString("stream-class")
 	if err != nil {
 		return nil, err

@@ -23,12 +23,12 @@ func NewDowntimeListCommand(ds interfaces.DowntimeService) DowntimeListCommand {
 		Short: "List of active downtime keys in the cluster, optionally filtered by stream class",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			parameters, err := models.NewDowntimeListParameters(cmd)
+			parameters, err := models.NewDowntimeSummaryParameters(cmd)
 			if err != nil {
 				return err
 			}
 
-			dts, err := ds.ListDowntimes(cmd.Context(), parameters)
+			dts, err := ds.GetSummary(cmd.Context(), parameters)
 			if err != nil {
 				return err
 			}

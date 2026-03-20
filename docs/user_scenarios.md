@@ -38,3 +38,47 @@ kubectl arcane downtime stop <stream-class> <key>
 ```
 The `<key>` parameter is used to identify the list of streams that are in downtime, and will be used to resume the
 streams that are in downtime. You should use the same key that you used for the downtime declaration.
+
+# I want to view the list of streams that are in downtime
+
+## List of active downtime keys
+
+To view the list of streams that are in downtime, you can use the following command:
+```sh
+kubectl arcane downtime list 
+```
+This command will show you the list of downtimes that are currently active, along with the stream class, prefix, and key for each downtime.
+Sample output:
+```
+        NAME                           COUNT   DURATION
+        maintenance-window-0           3       8m16.439644s
+        maintenance-window-2           3       8m14.439648s
+        details-maintenance-window-0   1       8m35.43965s
+        details-maintenance-window-1   1       8m34.439651s
+        details-maintenance-window-2   1       8m33.439651s
+        maintenance-window-1           9       10m29.439664s
+```
+
+## List of streams in downtime 
+
+To view the full list of streams in downtime, you can use the following command:
+```sh
+kubectl arcane downtime details
+```
+
+This command will show you the list of streams that suspended due to downtime
+```
+        DOWNTIME KEY                   STREAM NAME
+        details-maintenance-window-2   default/details-downtime-test-89dj4
+        details-maintenance-window-2   default/details-downtime-test-jmpfz
+        details-maintenance-window-2   default/details-downtime-test-xcr2m
+        maintenance-window-2           default/list-downtime-test-6vr9d
+        maintenance-window-2           default/list-downtime-test-86wk8
+        maintenance-window-0           default/list-downtime-test-rtthn
+        maintenance-window-1           default/list-downtime-test-ff4kr
+        maintenance-window-1           default/list-downtime-test-gcpkd
+        maintenance-window-1           integration-tests/integration-downtime-details-29mpd
+        maintenance-window-1           integration-tests/integration-downtime-list-7gjxs
+        maintenance-window-1           integration-tests/integration-downtime-list-l5rl2
+        maintenance-window-1           integration-tests/integration-downtime-list-nzmxn
+```

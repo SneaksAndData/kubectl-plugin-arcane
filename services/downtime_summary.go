@@ -1,6 +1,8 @@
 package services
 
 import (
+	"time"
+
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/interfaces"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -9,10 +11,11 @@ var _ interfaces.DowntimeSummary = (*DowntimeSummary)(nil)
 
 type DowntimeSummary struct {
 	groupedByKey map[string][]string
+	durations    map[string]time.Time
 }
 
-func NewDowntimeSummary(counts map[string][]string) *DowntimeSummary {
-	return &DowntimeSummary{groupedByKey: counts}
+func NewDowntimeSummary(counts map[string][]string, durations map[string]time.Time) *DowntimeSummary {
+	return &DowntimeSummary{groupedByKey: counts, durations: durations}
 }
 
 func (d *DowntimeSummary) Counts() *metav1.Table { // coverage-ignore (tested in integration tests)
@@ -24,6 +27,7 @@ func (d *DowntimeSummary) Counts() *metav1.Table { // coverage-ignore (tested in
 		ColumnDefinitions: []metav1.TableColumnDefinition{
 			{Name: "Name", Type: "string"},
 			{Name: "Count", Type: "integer"},
+			{Name: "Duration", Type: "string"},
 		},
 	}
 
@@ -32,6 +36,7 @@ func (d *DowntimeSummary) Counts() *metav1.Table { // coverage-ignore (tested in
 			Cells: []interface{}{
 				key,
 				len(streams),
+				time.Since(d.durations[key]).String(),
 			},
 		}
 		table.Rows = append(table.Rows, row)

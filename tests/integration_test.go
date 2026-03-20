@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	mockv1 "github.com/SneaksAndData/arcane-stream-mock/pkg/apis/streaming/v1"
 	mockversionedv1 "github.com/SneaksAndData/arcane-stream-mock/pkg/generated/clientset/versioned"
@@ -87,7 +88,10 @@ func Test_DowntimeStop(t *testing.T) {
 		func(def *mockv1.TestStreamDefinition) {
 			def.Namespace = "integration-tests"
 			def.Labels = map[string]string{
-				interfaces.DowntimeAnnotationKey: "maintenance-window-1",
+				interfaces.DowntimeLabelKey: "maintenance-window-1",
+			}
+			def.Annotations = map[string]string{
+				interfaces.DowntimeBeginAnnotationKey: time.Now().UTC().Format(time.RFC3339),
 			}
 			def.Spec.RunDuration = "5s"
 			def.Spec.Suspended = true
@@ -103,7 +107,10 @@ func Test_DowntimeList(t *testing.T) {
 		func(def *mockv1.TestStreamDefinition) {
 			def.Namespace = "integration-tests"
 			def.Labels = map[string]string{
-				interfaces.DowntimeAnnotationKey: "maintenance-window-1",
+				interfaces.DowntimeLabelKey: "maintenance-window-1",
+			}
+			def.Annotations = map[string]string{
+				interfaces.DowntimeBeginAnnotationKey: time.Now().UTC().Format(time.RFC3339),
 			}
 			def.Spec.RunDuration = "5s"
 			def.Spec.Suspended = true
@@ -119,7 +126,10 @@ func Test_DowntimeDetails(t *testing.T) {
 		func(def *mockv1.TestStreamDefinition) {
 			def.Namespace = "integration-tests"
 			def.Labels = map[string]string{
-				interfaces.DowntimeAnnotationKey: "maintenance-window-1",
+				interfaces.DowntimeLabelKey: "maintenance-window-1",
+			}
+			def.Annotations = map[string]string{
+				interfaces.DowntimeBeginAnnotationKey: time.Now().UTC().Format(time.RFC3339),
 			}
 			def.Spec.RunDuration = "5s"
 			def.Spec.Suspended = true
@@ -197,8 +207,8 @@ func runCommand(ctx context.Context, args string) ([]byte, error) {
 
 func runIntegrationTest(t *testing.T, setup func(def *mockv1.TestStreamDefinition), commandTemplate string) {
 	name := helpers.NewTestStream(t, clientSet, setup)
-
 	require.NotEmpty(t, name)
+
 	var command string
 	if strings.Contains(commandTemplate, "%s") {
 		command = fmt.Sprintf(commandTemplate, name)
@@ -206,6 +216,7 @@ func runIntegrationTest(t *testing.T, setup func(def *mockv1.TestStreamDefinitio
 		command = commandTemplate
 	}
 	fmt.Println(command)
+
 	output, err := runCommand(t.Context(), command)
 	if err != nil {
 		t.Fatalf("Command failed: %v\nOutput: %s", err, string(output))

@@ -25,14 +25,17 @@ func (s downtimeStopProcessor) Process(ctx context.Context, def types.Namespaced
 	}
 
 	labels := stream.GetLabels()
-
-	if labels[interfaces.DowntimeAnnotationKey] != s.key {
+	if labels[interfaces.DowntimeLabelKey] != s.key {
 		logging.LogError(stream, "has a different downtime key, skipping", err)
 		return nil, false, nil // Skip items that don't match the downtime key
 	}
 
-	delete(labels, interfaces.DowntimeAnnotationKey)
+	delete(labels, interfaces.DowntimeLabelKey)
 	stream.SetLabels(labels)
+
+	annotations := stream.GetAnnotations()
+	delete(annotations, interfaces.DowntimeBeginAnnotationKey)
+	stream.SetAnnotations(annotations)
 
 	definition, err := streamapis.FromUnstructured(stream)
 	if err != nil { // coverage-ignore

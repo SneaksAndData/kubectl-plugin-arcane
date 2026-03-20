@@ -20,14 +20,16 @@ type StreamClassMembers struct {
 	streamClass    string
 	namespace      string
 	objectFilter   interfaces.ObjectFilter
+	selector       *client.MatchingLabelsSelector
 }
 
-func NewStreamClassMembersPublisher(provider cmdinterfaces.ClientProvider, streamClass string, namespace string, objectFilter interfaces.ObjectFilter) *StreamClassMembers {
+func NewStreamClassMembersPublisher(provider cmdinterfaces.ClientProvider, streamClass string, namespace string, objectFilter interfaces.ObjectFilter, selector *client.MatchingLabelsSelector) *StreamClassMembers {
 	return &StreamClassMembers{
 		clientProvider: provider,
 		streamClass:    streamClass,
 		namespace:      namespace,
 		objectFilter:   objectFilter,
+		selector:       selector,
 	}
 }
 
@@ -57,7 +59,8 @@ func (s StreamClassMembers) PublishStreamDefinitions(ctx context.Context, queue 
 	if err != nil { // coverage-ignore
 		return err
 	}
-	err = unstructuredClient.List(ctx, streamList, client.InNamespace(s.namespace))
+
+	err = unstructuredClient.List(ctx, streamList, client.InNamespace(s.namespace), s.selector)
 	if err != nil { // coverage-ignore
 		return err
 	}

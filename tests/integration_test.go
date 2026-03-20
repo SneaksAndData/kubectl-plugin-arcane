@@ -207,8 +207,8 @@ func runCommand(ctx context.Context, args string) ([]byte, error) {
 
 func runIntegrationTest(t *testing.T, setup func(def *mockv1.TestStreamDefinition), commandTemplate string) {
 	name := helpers.NewTestStream(t, clientSet, setup)
-
 	require.NotEmpty(t, name)
+
 	var command string
 	if strings.Contains(commandTemplate, "%s") {
 		command = fmt.Sprintf(commandTemplate, name)
@@ -216,6 +216,7 @@ func runIntegrationTest(t *testing.T, setup func(def *mockv1.TestStreamDefinitio
 		command = commandTemplate
 	}
 	fmt.Println(command)
+
 	output, err := runCommand(t.Context(), command)
 	if err != nil {
 		t.Fatalf("Command failed: %v\nOutput: %s", err, string(output))

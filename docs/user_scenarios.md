@@ -1,14 +1,29 @@
 # Arcane kubectl plugin user scenarios cheat sheet
 
+## Stream classes
+To figure out which inputs can be giving as `<stream-class>` parameter in the commands below, you can use the following command to list all stream classes in the cluster:
+```sh
+kubectl get streamclasses
+```
+
+
 ## I need to urgently stop a stream
 To stop a stream without need to create a terraform pull request, you can use the following command:
 ```sh
 kubectl arcane stream stop <stream-class> <stream-id> [--namespace <stream-namespace>]
 ```
+Example with dummy inputs:
+```sh
+kubectl arcane stream stop arcane-stream-parquet my-stream-id-name --namespace stream-parquet
+```
 
 To start the stream again, you can use the following command:
 ```sh
 kubectl arcane stream start <stream-class> <stream-id> [--namespace <stream-namespace>]
+```
+Example with dummy inputs:
+```sh
+kubectl arcane stream start arcane-stream-parquet my-stream-id-name --namespace stream-parquet
 ```
 
 ## I need to run a stream in backfill mode

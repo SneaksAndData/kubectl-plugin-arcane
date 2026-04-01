@@ -126,7 +126,7 @@ jobs:
           use: true
           platforms: linux/arm64,linux/amd64
 
-      - name: Build and push Docker image
+      - name: Build docker image (validate Dockerfile)
         uses: docker/build-push-action@v6.18.0
         with:
           context: .
@@ -134,7 +134,7 @@ jobs:
             APPVERSION=${{ steps.version.outputs.version }}
             BUILDNUMBER=${{ steps.buildnumber.outputs.result }}
           file: .container/Dockerfile
-          push: true
+          push: false
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/arm64,linux/amd64

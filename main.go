@@ -16,6 +16,8 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 )
 
+var Version = "v0.0.0"
+
 func main() {
 	app := fx.New(
 		fx.Supply(genericclioptions.NewConfigFlags(true)),
@@ -34,6 +36,7 @@ func main() {
 		fx.Provide(services.NewUnstructuredReader),
 		fx.Provide(commands.NewDowntimeListCommand),
 		fx.Provide(commands.NewDowntimeDetailsCommand),
+		fx.Supply(fx.Annotate(commands.NewVersionCommand(Version), fx.As(new(commands.VersionCommand)))),
 		fx.NopLogger,
 		fx.Invoke(
 			func(rootCmd commands.RootCommand, shutDowner fx.Shutdowner, lifeCycle fx.Lifecycle) error {

@@ -3,7 +3,7 @@ package publisher
 import (
 	"context"
 
-	streamapis "github.com/SneaksAndData/arcane-operator/services/controllers/stream"
+	"github.com/SneaksAndData/arcane-operator/services/controllers/contracts"
 	cmdinterfaces "github.com/sneaksAndData/kubectl-plugin-arcane/commands/interfaces"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/logging"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/services/interfaces"
@@ -66,7 +66,7 @@ func (s StreamClassMembers) PublishStreamDefinitions(ctx context.Context, queue 
 	}
 
 	for _, item := range streamList.Items {
-		streamDefinition, err := streamapis.FromUnstructured(&item)
+		streamDefinition, err := contracts.FromUnstructured(&item)
 		if err != nil {
 			logging.LogError(&item, "parsing kubernetes object, skipping", err)
 			continue // Skip items that can't be parsed as stream definitions

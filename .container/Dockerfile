@@ -3,11 +3,11 @@
 ARG TARGETOS
 ARG TARGETARCH
 
-FROM golang:1.18 as build
+FROM golang:1.18-bullseye as build
 
-RUN yum update -y && yum install -y unzip curl \
+RUN apt-get update && apt-get install -y --no-install-recommends unzip curl \
     ### AWS CLI v2
-    cli_arch=$(test "$TARGETARCH" = "amd64" && echo "x86_64" || echo "aarch64") \
+    && cli_arch=$(test "$TARGETARCH" = "amd64" && echo "x86_64" || echo "aarch64") \
     && curl "https://awscli.amazonaws.com/awscli-exe-linux-$cli_arch.zip" -o "aws-cli-v2.zip" \
     && unzip aws-cli-v2.zip \
     # The --bin-dir is specified so that we can copy the

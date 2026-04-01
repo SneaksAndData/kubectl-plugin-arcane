@@ -12,7 +12,10 @@ COPY . ./
 
 RUN go mod verify && go mod vendor
 
-RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -ldflags "-X 'main.Version=$APPVERSION'" -o /kubectl-arcane -v  .
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -v \
+    -ldflags "-X 'main.Version=$APPVERSION' -X main.BuildNumber=$BUILDNUMBER" \
+    -o /kubectl-arcane \
+    .
 
 
 FROM --platform=$BUILDPLATFORM public.ecr.aws/amazonlinux/amazonlinux:2 AS aws-cli-stage

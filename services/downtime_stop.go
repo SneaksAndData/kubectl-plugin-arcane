@@ -4,7 +4,7 @@ import (
 	"context"
 
 	v1 "github.com/SneaksAndData/arcane-operator/pkg/apis/streaming/v1"
-	streamapis "github.com/SneaksAndData/arcane-operator/services/controllers/stream"
+	"github.com/SneaksAndData/arcane-operator/services/controllers/contracts"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/logging"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/services/interfaces"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -37,7 +37,7 @@ func (s downtimeStopProcessor) Process(ctx context.Context, def types.Namespaced
 	delete(annotations, interfaces.DowntimeBeginAnnotationKey)
 	stream.SetAnnotations(annotations)
 
-	definition, err := streamapis.FromUnstructured(stream)
+	definition, err := contracts.FromUnstructured(stream)
 	if err != nil { // coverage-ignore
 		return nil, false, err
 	}

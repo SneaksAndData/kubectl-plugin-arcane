@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/SneaksAndData/arcane-operator/pkg/apis/streaming/v1"
+	"github.com/SneaksAndData/arcane-operator/services/controllers/contracts"
 	streamapis "github.com/SneaksAndData/arcane-operator/services/controllers/stream"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/interfaces"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/models"
@@ -166,7 +167,7 @@ func (s *stream) modifyStreamDefinition(ctx context.Context,
 		return fmt.Errorf("error providing unstructured client: %w", err)
 	}
 
-	streamDefinition, err := streamapis.GetStreamForClass(ctx, unstructuredClient, sc, namespacedName)
+	streamDefinition, err := streamapis.GetStreamForClass(ctx, unstructuredClient, sc, namespacedName, contracts.FromUnstructured)
 	if err != nil {
 		return fmt.Errorf("error fetching stream definition: %w", err)
 	}

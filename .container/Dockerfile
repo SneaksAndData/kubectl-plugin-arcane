@@ -1,8 +1,17 @@
-FROM --platform=$BUILDPLATFORM golang:1.24-bookworm AS build-stage
+FROM --platform=$BUILDPLATFORM golang:1.25-bookworm AS build-stage
 
 ARG TARGETOS
 ARG TARGETARCH
 ARG KUBECTL_VERSION="v1.34.0"
+
+WORKDIR /app
+
+COPY . ./
+
+RUN go mod verify && go mod vendor
+
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -o /kubectl-arcane -v  .
+
 
 FROM --platform=$BUILDPLATFORM public.ecr.aws/amazonlinux/amazonlinux:2 AS aws-cli-stage
 
@@ -27,14 +36,7 @@ RUN yum update -y && yum install -y unzip curl tar gzip \
     ### kubectl \
     ###\
     && curl -L "https://dl.k8s.io/release/$KUBECTL_VERSION/bin/linux/$TARGETARCH/kubectl" -o /usr/local/bin/kubectl \
-    && chmod +x /usr/local/bin/kubectl \
-    ###\
-    ### Krew \
-    ###\
-    && KREW="krew-${TARGETOS}_${TARGETARCH}" \
-    && curl -fsSLO "https://github.com/kubernetes-sigs/krew/releases/latest/download/${KREW}.tar.gz" \
-    && tar zxvf "${KREW}.tar.gz" \
-    && ./"${KREW}" install krew
+    && chmod +x /usr/local/bin/kubectl
 
 
 ## Deploy the application binary into a lean image

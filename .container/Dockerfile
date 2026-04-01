@@ -10,7 +10,7 @@ ARG TARGETOS
 ARG TARGETARCH
 ARG KUBECTL_VERSION="v1.34.0"
 
-RUN yum update -y && yum install -y unzip curl \
+RUN yum update -y && yum install -y unzip curl tar gzip \
     ###\
     ### AWS CLI v2 \
     ###\

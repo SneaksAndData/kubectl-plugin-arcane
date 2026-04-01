@@ -44,7 +44,7 @@ COPY --from=aws-cli-stage /usr/local/bin/kubectl /usr/local/bin/kubectl
 COPY --from=build-stage /kubectl-arcane /usr/local/bin
 COPY --from=aws-cli-stage /usr/local/aws-cli/ /usr/local/aws-cli/
 COPY --from=aws-cli-stage /aws-cli-bin/ /usr/local/bin/
-ENTRYPOINT ["kubectl", "arcane"]
+ENTRYPOINT ["kubectl"]
 
 ## Deploy the application binary into a lean image
 ## We cannot use distroless here because we need to run /bin/sh -c in the entrypoint script

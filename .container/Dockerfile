@@ -31,10 +31,10 @@ RUN yum update -y && yum install -y unzip curl \
     ###\
     ### Krew \
     ###\
-    KREW="krew-${TARGETOS}_${TARGETARCH}" && \
-    curl -fsSLO "https://github.com/kubernetes-sigs/krew/releases/latest/download/${KREW}.tar.gz" && \
-    tar zxvf "${KREW}.tar.gz" && \
-    ./"${KREW}" install krew
+    && KREW="krew-${TARGETOS}_${TARGETARCH}" \
+    && curl -fsSLO "https://github.com/kubernetes-sigs/krew/releases/latest/download/${KREW}.tar.gz" \
+    && tar zxvf "${KREW}.tar.gz" && \
+    && ./"${KREW}" install krew
 
 
 ## Deploy the application binary into a lean image

@@ -17,6 +17,7 @@ import (
 )
 
 var Version = "v0.0.0"
+var BuildNumber = "0"
 
 func main() {
 	app := fx.New(
@@ -36,7 +37,7 @@ func main() {
 		fx.Provide(services.NewUnstructuredReader),
 		fx.Provide(commands.NewDowntimeListCommand),
 		fx.Provide(commands.NewDowntimeDetailsCommand),
-		fx.Supply(fx.Annotate(commands.NewVersionCommand(Version), fx.As(new(commands.VersionCommand)))),
+		fx.Supply(fx.Annotate(commands.NewVersionCommand(Version, BuildNumber), fx.As(new(commands.VersionCommand)))),
 		fx.NopLogger,
 		fx.Invoke(
 			func(rootCmd commands.RootCommand, shutDowner fx.Shutdowner, lifeCycle fx.Lifecycle) error {

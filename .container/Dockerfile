@@ -33,7 +33,7 @@ RUN yum update -y && yum install -y unzip curl \
     ###\
     && KREW="krew-${TARGETOS}_${TARGETARCH}" \
     && curl -fsSLO "https://github.com/kubernetes-sigs/krew/releases/latest/download/${KREW}.tar.gz" \
-    && tar zxvf "${KREW}.tar.gz" && \
+    && tar zxvf "${KREW}.tar.gz" \
     && ./"${KREW}" install krew
 
 

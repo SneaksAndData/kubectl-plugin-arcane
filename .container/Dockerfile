@@ -2,6 +2,7 @@
 
 ARG TARGETOS
 ARG TARGETARCH
+ARG KUBECTL_VERSION="v1.34.0"
 
 FROM golang:1.18-bullseye as build
 
@@ -36,7 +37,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends unzip curl \
 #
 #ARG APPVERSION
 #ARG BUILDNUMBER
-#ARG KUBECTL_VERSION="v1.34.0"
 #
 #WORKDIR /app
 #

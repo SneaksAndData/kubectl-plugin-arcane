@@ -17,7 +17,7 @@ FROM --platform=$BUILDPLATFORM public.ecr.aws/amazonlinux/amazonlinux:2 AS aws-c
 
 ARG TARGETOS
 ARG TARGETARCH
-ARG KUBECTL_VERSION="v1.34.0"
+ARG KUBECTL_VERSION
 
 RUN yum update -y && yum install -y unzip curl tar gzip \
     ###\
@@ -39,6 +39,13 @@ RUN yum update -y && yum install -y unzip curl tar gzip \
     && chmod +x /usr/local/bin/kubectl
 
 
+FROM gcr.io/distroless/static-debian12
+COPY --from=aws-cli-stage /usr/local/bin/kubectl /usr/local/bin/kubectl
+COPY --from=build-stage /kubectl-arcane /usr/local/bin
+COPY --from=aws-cli-stage /usr/local/aws-cli/ /usr/local/aws-cli/
+COPY --from=aws-cli-stage /aws-cli-bin/ /usr/local/bin/
+ENTRYPOINT ["kubectl", "arcane"]
+
 ## Deploy the application binary into a lean image
 ## We cannot use distroless here because we need to run /bin/sh -c in the entrypoint script
 #FROM golang:1.24-bookworm AS build-release-stage
@@ -55,6 +62,5 @@ RUN yum update -y && yum install -y unzip curl tar gzip \
 #COPY --from=aws-cli-stage /aws-cli-bin/ /usr/local/bin/
 #COPY --from=aws-cli-stage /usr/local/bin/kubectl /usr/local/bin/
 #
-#ENV PATH="$PATH:/app"
 #
 #ENTRYPOINT ["/app/snd"]

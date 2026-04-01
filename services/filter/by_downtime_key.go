@@ -18,5 +18,5 @@ func NewByDowntimeKey(key string) *ByDowntimeKey {
 }
 
 func (f *ByDowntimeKey) Matches(definition stream.Definition) (bool, error) {
-	return definition.ToUnstructured().GetLabels()[interfaces.DowntimeAnnotationKey] == f.key, nil
+	return definition.ToUnstructured().GetLabels()[interfaces.DowntimeLabelKey] == f.key, nil
 }

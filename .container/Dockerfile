@@ -2,6 +2,8 @@ FROM --platform=$BUILDPLATFORM golang:1.25-bookworm AS build-stage
 
 ARG TARGETOS
 ARG TARGETARCH
+ARG BUILDNUMBER
+ARG APPVERSION
 ARG KUBECTL_VERSION="v1.34.0"
 
 WORKDIR /app
@@ -10,7 +12,10 @@ COPY . ./
 
 RUN go mod verify && go mod vendor
 
-RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -o /kubectl-arcane -v  .
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -v \
+    -ldflags "-X 'main.Version=$APPVERSION' -X main.BuildNumber=$BUILDNUMBER" \
+    -o /kubectl-arcane \
+    .
 
 
 FROM --platform=$BUILDPLATFORM public.ecr.aws/amazonlinux/amazonlinux:2 AS aws-cli-stage

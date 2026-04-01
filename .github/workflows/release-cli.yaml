@@ -21,6 +21,13 @@ jobs:
         with:
           go-version: '1.25.*'
 
+      - name: Get build number
+        shell: bash
+        id: buildnumber
+        run: |
+          dt=$(date +'%Y%m%d%H%M%S')
+          echo "result=$dt" >> "$GITHUB_OUTPUT"
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v7
         id: goreleaser
@@ -30,3 +37,4 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BUILD_NUMBER: ${{ steps.buildnumber.outputs.result }}

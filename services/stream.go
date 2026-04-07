@@ -61,9 +61,13 @@ func (s *stream) Backfill(ctx context.Context, parameters *models.BackfillParame
 			return fmt.Errorf("error creating backfill request: %w", err)
 		}
 
-	}
-	if !parameters.Wait {
-		return logging.Printer("created").PrintObj(bfr, os.Stdout)
+		err = logging.Printer("created").PrintObj(bfr, os.Stdout)
+		if err != nil {
+			return fmt.Errorf("error printing backfill request: %w", err)
+		}
+
+	} else {
+		return logging.Printer("already exists").PrintObj(bfr, os.Stdout)
 	}
 
 	err = logging.Printer("started").PrintObj(bfr, os.Stdout)

@@ -47,7 +47,7 @@ func (s *stream) Backfill(ctx context.Context, parameters *models.BackfillParame
 
 	bfr, err := s.getBackfillRequest(ctx, clientSet, parameters.Namespace, parameters.StreamId)
 	if err != nil {
-		return fmt.Errorf("error checking for existing backfill request: %w", err)
+		return fmt.Errorf("error checking for existence of an backfill request: %w", err)
 	}
 	if bfr == nil {
 		bfr, err = clientSet.

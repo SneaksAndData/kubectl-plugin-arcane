@@ -23,7 +23,7 @@ jobs:
         with:
           go-version: '1.25.*'
 
-      - uses: extractions/setup-just@v3
+      - uses: extractions/setup-just@v4
 
       - name: Check Format
         run: gofmt -d ./
@@ -127,7 +127,7 @@ jobs:
           platforms: linux/arm64,linux/amd64
 
       - name: Build docker image (validate Dockerfile)
-        uses: docker/build-push-action@v6.18.0
+        uses: docker/build-push-action@v7.0.0
         with:
           context: .
           build-args: |

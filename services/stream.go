@@ -217,5 +217,9 @@ func (s *stream) getBackfillRequest(ctx context.Context, clientSet *versioned.Cl
 		return nil, fmt.Errorf("multiple active backfill requests found for stream %s in namespace %s", namespace, namespace)
 	}
 
+	if len(list.Items) == 0 {
+		return nil, nil
+	}
+
 	return &list.Items[0], nil
 }

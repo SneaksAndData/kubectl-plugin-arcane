@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"testing"
 	"time"
@@ -77,7 +78,9 @@ func Test_Backfill_Wait_Exists(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	backfillList, err := clientSet.StreamingV1().BackfillRequests("default").List(t.Context(), metav1.ListOptions{})
+	backfillList, err := clientSet.StreamingV1().BackfillRequests("default").List(t.Context(), metav1.ListOptions{
+		FieldSelector: fmt.Sprintf("spec.streamId=%s", name),
+	})
 	require.NoError(t, err)
 	require.Equal(t, 1, len(backfillList.Items))
 }

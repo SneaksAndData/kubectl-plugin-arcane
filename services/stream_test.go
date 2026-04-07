@@ -2,13 +2,17 @@ package services
 
 import (
 	"context"
-	streamapis "github.com/SneaksAndData/arcane-operator/services/controllers/stream"
-	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/models"
-	"github.com/stretchr/testify/require"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	"fmt"
 	"sync"
 	"testing"
 	"time"
+
+	streamapis "github.com/SneaksAndData/arcane-operator/services/controllers/stream"
+	mockv1 "github.com/SneaksAndData/arcane-stream-mock/pkg/apis/streaming/v1"
+	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/models"
+	"github.com/sneaksAndData/kubectl-plugin-arcane/tests/helpers"
+	"github.com/stretchr/testify/require"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	versionedv1 "github.com/SneaksAndData/arcane-operator/pkg/generated/clientset/versioned"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -50,6 +54,67 @@ func Test_Backfill_Wait(t *testing.T) {
 	bfr, err := findBackfillRequestByName(t.Context(), "default", name)
 	require.NoError(t, err)
 	require.True(t, bfr.Spec.Completed)
+}
+
+func Test_Backfill_Duplicate(t *testing.T) {
+	name := helpers.NewTestStream(t, clientSet, func(def *mockv1.TestStreamDefinition) {
+		def.Spec.RunDuration = "30m"
+		def.Spec.Suspended = false
+	})
+	require.NotEmpty(t, name)
+
+	err := waitForPhase(t, name, streamapis.Backfilling)
+	require.NoError(t, err)
+
+	clientSet := versionedv1.NewForConfigOrDie(kubeConfig)
+
+	streamService := NewStreamService(NewFakeClientProvider(clientSet, nil))
+
+	err = streamService.Backfill(t.Context(), &models.BackfillParameters{
+		Namespace:   "default",
+		StreamId:    name,
+		StreamClass: "arcane-stream-mock",
+		Wait:        false,
+	})
+	require.NoError(t, err)
+
+	backfillList, err := clientSet.StreamingV1().BackfillRequests("default").List(t.Context(), metav1.ListOptions{
+		FieldSelector: fmt.Sprintf("spec.streamId=%s", name),
+	})
+	require.NoError(t, err)
+	require.Equal(t, 1, len(backfillList.Items))
+}
+
+func Test_Backfill_CompletedDuplicate(t *testing.T) {
+	name := helpers.NewTestStream(t, clientSet, func(def *mockv1.TestStreamDefinition) {
+		def.Spec.RunDuration = "3s"
+		def.Spec.Suspended = false
+	})
+	require.NotEmpty(t, name)
+
+	err := waitForPhase(t, name, streamapis.Running)
+	require.NoError(t, err)
+
+	clientSet := versionedv1.NewForConfigOrDie(kubeConfig)
+
+	streamService := NewStreamService(NewFakeClientProvider(clientSet, nil))
+
+	err = streamService.Backfill(t.Context(), &models.BackfillParameters{
+		Namespace:   "default",
+		StreamId:    name,
+		StreamClass: "arcane-stream-mock",
+		Wait:        false,
+	})
+	require.NoError(t, err)
+
+	err = waitForPhase(t, name, streamapis.Running)
+	require.NoError(t, err)
+
+	backfillList, err := clientSet.StreamingV1().BackfillRequests("default").List(t.Context(), metav1.ListOptions{
+		FieldSelector: fmt.Sprintf("spec.streamId=%s", name),
+	})
+	require.NoError(t, err)
+	require.Equal(t, 2, len(backfillList.Items))
 }
 
 func Test_Backfill_Cancelled(t *testing.T) {

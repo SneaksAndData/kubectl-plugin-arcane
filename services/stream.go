@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/SneaksAndData/arcane-operator/pkg/apis/streaming/v1"
+	"github.com/SneaksAndData/arcane-operator/pkg/generated/clientset/versioned"
 	"github.com/SneaksAndData/arcane-operator/services/controllers/contracts"
 	streamapis "github.com/SneaksAndData/arcane-operator/services/controllers/stream"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/interfaces"
@@ -43,19 +44,28 @@ func (s *stream) Backfill(ctx context.Context, parameters *models.BackfillParame
 	if err != nil {
 		return fmt.Errorf("error providing client set: %w", err)
 	}
-	bfr, err := clientSet.
-		StreamingV1().
-		BackfillRequests(parameters.Namespace).
-		Create(ctx, parameters.ToBackfillRequest(), metav1.CreateOptions{
-			FieldManager:    fieldManager,
-			FieldValidation: "Strict",
-		})
-	if err != nil {
-		return fmt.Errorf("error creating backfill request: %w", err)
-	}
 
-	if !parameters.Wait {
-		return logging.Printer("created").PrintObj(bfr, os.Stdout)
+	bfr, err := s.getBackfillRequest(ctx, clientSet, parameters.Namespace, parameters.StreamId)
+	if err != nil {
+		return fmt.Errorf("error checking for existence of an backfill request: %w", err)
+	}
+	if bfr == nil {
+		bfr, err = clientSet.
+			StreamingV1().
+			BackfillRequests(parameters.Namespace).
+			Create(ctx, parameters.ToBackfillRequest(), metav1.CreateOptions{
+				FieldManager:    fieldManager,
+				FieldValidation: "Strict",
+			})
+		if err != nil {
+			return fmt.Errorf("error creating backfill request: %w", err)
+		}
+
+		if !parameters.Wait {
+			return logging.Printer("created").PrintObj(bfr, os.Stdout)
+		}
+	} else {
+		return logging.Printer("already exists").PrintObj(bfr, os.Stdout)
 	}
 
 	err = logging.Printer("started").PrintObj(bfr, os.Stdout)
@@ -191,4 +201,27 @@ func (s *stream) modifyStreamDefinition(ctx context.Context,
 		return fmt.Errorf("error printing stream definition: %w", err)
 	}
 	return nil
+}
+
+func (s *stream) getBackfillRequest(ctx context.Context, clientSet *versioned.Clientset, namespace string, id string) (*v1.BackfillRequest, error) {
+	list, err := clientSet.
+		StreamingV1().
+		BackfillRequests(namespace).
+		List(ctx, metav1.ListOptions{
+			FieldSelector: fmt.Sprintf("spec.completed=false,spec.streamId=%s", id),
+		})
+
+	if err != nil {
+		return nil, fmt.Errorf("error listing backfill requests: %w", err)
+	}
+
+	if len(list.Items) > 1 {
+		return nil, fmt.Errorf("multiple active backfill requests found for stream %s in namespace %s", namespace, namespace)
+	}
+
+	if len(list.Items) == 0 {
+		return nil, nil
+	}
+
+	return &list.Items[0], nil
 }

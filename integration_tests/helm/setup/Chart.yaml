@@ -6,5 +6,5 @@ version: 0.0.0
 appVersion: "0.0.0"
 dependencies:
   - name: arcane-crd
-    version: v0.0.8-3-g43bf613
+    version: v0.0.8-5-gc5411cb
     repository: oci://ghcr.io/sneaksanddata/helm

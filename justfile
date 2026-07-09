@@ -25,14 +25,14 @@ install-stream:
 operator:
     helm install arcane-operator oci://ghcr.io/sneaksanddata/helm/arcane-operator \
         --namespace default \
-        --version v1.0.7
+        --version v1.1.6-3-g85d9aa0
 
 mock-stream-plugin:
     helm install arcane-stream-mock oci://ghcr.io/sneaksanddata/helm/arcane-stream-mock \
         --namespace default \
         --set jobTemplateSettings.podFailurePolicySettings.retryOnExitCodes="{120,121}" \
         --set jobTemplateSettings.backoffLimit=1 \
-        --version v1.0.6
+        --version v1.0.14
 
 manifests:
     kubectl apply -f integration_tests/manifests/

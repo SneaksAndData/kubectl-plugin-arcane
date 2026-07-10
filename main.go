@@ -20,7 +20,6 @@ var Version = "v0.0.0"
 var BuildNumber = "0"
 
 func main() {
-	print("Starting Arcane CLI plugin...\n")
 	app := fx.New(
 		fx.Supply(genericclioptions.NewConfigFlags(true)),
 		fx.Provide(commands.NewStreamCommand),

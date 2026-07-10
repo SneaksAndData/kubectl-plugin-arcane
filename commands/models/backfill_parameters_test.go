@@ -20,7 +20,7 @@ func TestNewBackfillParameters(t *testing.T) {
 		".spec.sink.mergeServiceClient.connectionUrl=http://somewhere",
 	}
 
-	parameters, err := NewBackfillParameters(cmd, []string{"stream-class", "stream-id"}, configFlags, overrides)
+	parameters, err := NewBackfillParameters(cmd, []string{"stream-class", "stream-id"}, configFlags, &overrides)
 	require.NoError(t, err)
 	require.Equal(t, "stream-class", parameters.StreamClass)
 	require.Equal(t, "stream-id", parameters.StreamId)
@@ -33,7 +33,7 @@ func TestBackfillParameters_ToBackfillRequest_WithOverrides(t *testing.T) {
 		StreamClass: "stream-class",
 		StreamId:    "stream-id",
 		Namespace:   "default",
-		overrides: []string{
+		overrides: &[]string{
 			".spec.backfillBehavior=merge",
 			".spec.sink.mergeServiceClient.connectionUrl=http://somewhere",
 			".spec.somethingElse=something_else",
@@ -60,7 +60,7 @@ func TestBackfillParameters_ToBackfillRequest_WithOverrides(t *testing.T) {
 }
 
 func TestGeneratePayload_IgnoresNonSpecAndHandlesConflicts(t *testing.T) {
-	payload := generatePayload([]string{
+	payload := generatePayload(&[]string{
 		".spec.a=value",
 		".spec.a.b=nested-value",
 		".spec.empty",

@@ -60,6 +60,9 @@ func (p BackfillParameters) ToBackfillRequest() *v1.BackfillRequest {
 }
 
 func generatePayload(overrides *[]string) *runtime.RawExtension {
+	if overrides == nil {
+		return nil
+	}
 	nestedSpecMap := make(map[string]interface{})
 	for _, kv := range *overrides {
 		parts := strings.SplitN(kv, "=", 2)

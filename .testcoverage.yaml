@@ -10,3 +10,4 @@ threshold:
 exclude:
   paths:
     - main.go # application entry point
+    - commands/*.go # CLI commands

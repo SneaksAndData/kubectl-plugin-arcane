@@ -15,15 +15,15 @@ import (
 
 // BackfillParameters represents the parameters required to perform a backfill operation for a stream.
 type BackfillParameters struct {
-	StreamClass string   // The class of the stream to backfill.
-	StreamId    string   // The unique identifier of the stream to backfill.
-	Wait        bool     // Whether to wait for the backfill operation to complete before returning.
-	Namespace   string   // The namespace in which the stream is located. If empty, the default namespace will be used.
-	overrides   []string // List of overrides to apply to the backfill operation, in the format "key=value".
+	StreamClass string    // The class of the stream to backfill.
+	StreamId    string    // The unique identifier of the stream to backfill.
+	Wait        bool      // Whether to wait for the backfill operation to complete before returning.
+	Namespace   string    // The namespace in which the stream is located. If empty, the default namespace will be used.
+	overrides   *[]string // List of overrides to apply to the backfill operation, in the format "key=value".
 }
 
 // NewBackfillParameters creates a new instance of BackfillParameters based on the provided command and arguments.
-func NewBackfillParameters(cmd *cobra.Command, args []string, configFlags *genericclioptions.ConfigFlags, overrides []string) (*BackfillParameters, error) { // coverage-ignore (tested in integration tests)
+func NewBackfillParameters(cmd *cobra.Command, args []string, configFlags *genericclioptions.ConfigFlags, overrides *[]string) (*BackfillParameters, error) { // coverage-ignore (tested in integration tests)
 
 	wait, err := cmd.Flags().GetBool("wait")
 	if err != nil {
@@ -59,9 +59,9 @@ func (p BackfillParameters) ToBackfillRequest() *v1.BackfillRequest {
 	}
 }
 
-func generatePayload(overrides []string) *runtime.RawExtension {
+func generatePayload(overrides *[]string) *runtime.RawExtension {
 	nestedSpecMap := make(map[string]interface{})
-	for _, kv := range overrides {
+	for _, kv := range *overrides {
 		parts := strings.SplitN(kv, "=", 2)
 		key := parts[0]
 		value := ""

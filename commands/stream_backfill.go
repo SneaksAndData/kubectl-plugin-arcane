@@ -11,6 +11,7 @@ import (
 // StreamBackfill is a command that runs a stream backfill operation.
 type StreamBackfill interface {
 	internal.GenericCommand
+	GetOverrides() []string
 }
 
 // NewStreamBackfill creates a new instance of the StreamBackfill command, which runs a stream backfill operation.
@@ -27,6 +28,24 @@ func NewStreamBackfill(streamService interfaces.StreamService, configFlags *gene
 			return streamService.Backfill(cmd.Context(), parameters)
 		},
 	}
+	command := backfillCommand{
+		Command:   &cmd,
+		overrides: []string{},
+	}
 	cmd.Flags().Bool("wait", false, "Wait for backfill command to complete")
-	return internal.NewGenericCommand(&cmd)
+	cmd.Flags().StringArrayVarP(&command.overrides, "override", "o", []string{}, "Override spec values (format: key=value)")
+	return &command
+}
+
+type backfillCommand struct {
+	*cobra.Command
+	overrides []string
+}
+
+func (b *backfillCommand) GetCommand() *cobra.Command {
+	return b.Command
+}
+
+func (b *backfillCommand) GetOverrides() []string {
+	return b.overrides
 }

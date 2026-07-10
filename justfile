@@ -23,9 +23,9 @@ install-stream:
     kubectl apply -f integration_tests/manifests/crd-microsoft-sql-server-stream.yaml
 
 operator:
-    helm install arcane-operator oci://ghcr.io/sneaksanddata/helm/arcane-operator \
+    helm upgrade --install arcane-operator oci://ghcr.io/sneaksanddata/helm/arcane-operator \
         --namespace default \
-        --version v1.1.7
+        --version v1.1.7-3-ge062251
 
 mock-stream-plugin:
     helm install arcane-stream-mock oci://ghcr.io/sneaksanddata/helm/arcane-stream-mock \

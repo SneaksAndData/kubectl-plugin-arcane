@@ -25,7 +25,7 @@ func TestNewBackfillParameters(t *testing.T) {
 	require.Equal(t, "stream-class", parameters.StreamClass)
 	require.Equal(t, "stream-id", parameters.StreamId)
 	require.True(t, parameters.Wait)
-	require.Equal(t, overrides, parameters.overrides)
+	require.Equal(t, &overrides, parameters.overrides)
 }
 
 func TestBackfillParameters_ToBackfillRequest_WithOverrides(t *testing.T) {

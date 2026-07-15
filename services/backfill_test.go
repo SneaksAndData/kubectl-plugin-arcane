@@ -22,7 +22,7 @@ func Test_Backfill(t *testing.T) {
 
 	clientSet := versionedv1.NewForConfigOrDie(kubeConfig)
 
-	backfillService := NewBackfillService(NewFakeClientProvider(clientSet, nil))
+	backfillService := newBackfillService(NewFakeClientProvider(clientSet, nil))
 	err := backfillService.Backfill(t.Context(), &models.BackfillParameters{
 		Namespace:   "default",
 		StreamId:    name,
@@ -41,7 +41,7 @@ func Test_Backfill_Wait(t *testing.T) {
 
 	clientSet := versionedv1.NewForConfigOrDie(kubeConfig)
 
-	backfillService := NewBackfillService(NewFakeClientProvider(clientSet, nil))
+	backfillService := newBackfillService(NewFakeClientProvider(clientSet, nil))
 	err := backfillService.Backfill(t.Context(), &models.BackfillParameters{
 		Namespace:   "default",
 		StreamId:    name,
@@ -66,7 +66,7 @@ func Test_Backfill_Duplicate(t *testing.T) {
 
 	clientSet := versionedv1.NewForConfigOrDie(kubeConfig)
 
-	backfillService := NewBackfillService(NewFakeClientProvider(clientSet, nil))
+	backfillService := newBackfillService(NewFakeClientProvider(clientSet, nil))
 
 	err = backfillService.Backfill(t.Context(), &models.BackfillParameters{
 		Namespace:   "default",
@@ -95,7 +95,7 @@ func Test_Backfill_CompletedDuplicate(t *testing.T) {
 
 	clientSet := versionedv1.NewForConfigOrDie(kubeConfig)
 
-	backfillService := NewBackfillService(NewFakeClientProvider(clientSet, nil))
+	backfillService := newBackfillService(NewFakeClientProvider(clientSet, nil))
 
 	err = backfillService.Backfill(t.Context(), &models.BackfillParameters{
 		Namespace:   "default",
@@ -125,7 +125,7 @@ func Test_Backfill_Cancelled(t *testing.T) {
 	ctx, cancel := context.WithCancel(t.Context())
 	defer cancel() // Ensure context is cleaned up even if test fails
 
-	backfillService := NewBackfillService(NewFakeClientProvider(clientSet, nil))
+	backfillService := newBackfillService(NewFakeClientProvider(clientSet, nil))
 	var err error
 	var wg sync.WaitGroup
 	wg.Add(1)

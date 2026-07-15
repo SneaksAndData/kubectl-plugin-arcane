@@ -22,8 +22,8 @@ type backfill struct {
 	clientProvider interfaces.ClientProvider
 }
 
-// NewBackfillService creates a new instance of the backfill, which provides backfill operations.
-func NewBackfillService(clientProvider interfaces.ClientProvider) interfaces.BackfillService {
+// newBackfillService creates a new instance of the backfill, which provides backfill operations.
+func newBackfillService(clientProvider interfaces.ClientProvider) interfaces.BackfillService {
 	return &backfill{
 		clientProvider: clientProvider,
 	}

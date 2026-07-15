@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"context"
+
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/models"
 )
 
@@ -13,7 +14,4 @@ type StreamService interface {
 
 	// Stop terminates an active stream based on the provided command and arguments.
 	Stop(ctx context.Context, parameters *models.StopParameters) error
-
-	// Backfill performs a backfill operation for a stream based on the provided command and arguments.
-	Backfill(ctx context.Context, parameters *models.BackfillParameters) error
 }

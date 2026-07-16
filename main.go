@@ -22,21 +22,25 @@ var BuildNumber = "0"
 func main() {
 	app := fx.New(
 		fx.Supply(genericclioptions.NewConfigFlags(true)),
+
 		fx.Provide(commands.NewStreamCommand),
 		fx.Provide(commands.NewDowntimeStopCommand),
 		fx.Provide(commands.NewDowntimeCommand),
 		fx.Provide(commands.NewDowntimeDeclareCommand),
-		fx.Provide(services.NewDowntimeService),
 		fx.Provide(commands.NewRootCommand),
 		fx.Provide(commands.NewStreamStop),
 		fx.Provide(commands.NewStreamStart),
 		fx.Provide(commands.NewStreamBackfill),
+		fx.Provide(commands.NewDowntimeListCommand),
+		fx.Provide(commands.NewDowntimeDetailsCommand),
+
+		fx.Provide(services.NewDowntimeService),
+		fx.Provide(services.NewValidatedBackfillService),
 		fx.Provide(services.NewStreamService),
 		fx.Provide(services.NewClientProvider),
 		fx.Provide(services.NewDowntimeProcessorFactory),
 		fx.Provide(services.NewUnstructuredReader),
-		fx.Provide(commands.NewDowntimeListCommand),
-		fx.Provide(commands.NewDowntimeDetailsCommand),
+
 		fx.Supply(fx.Annotate(commands.NewVersionCommand(Version, BuildNumber), fx.As(new(commands.VersionCommand)))),
 		fx.NopLogger,
 		fx.Invoke(

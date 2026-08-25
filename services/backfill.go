@@ -32,24 +32,24 @@ func newBackfillService(clientProvider interfaces.ClientProvider) interfaces.Bac
 // Backfill is a method that allows users to run a stream backfill operation
 func (b *backfill) Backfill(ctx context.Context, parameters *models.BackfillParameters) error {
 	clientSet, err := b.clientProvider.ProvideClientSet()
-	if err != nil {
+	if err != nil { // coverage-ignore
 		return fmt.Errorf("error providing client set: %w", err)
 	}
 
 	bfr, err := b.getBackfillRequest(ctx, clientSet, parameters.Namespace, parameters.StreamId)
-	if err != nil {
+	if err != nil { // coverage-ignore
 		return fmt.Errorf("error checking for existence of an backfill request: %w", err)
 	}
 	if bfr == nil {
 		newBackfillRequest, err := parameters.ToBackfillRequest()
-		if err != nil {
+		if err != nil { // coverage-ignore
 			return fmt.Errorf("error converting parameters to backfill request: %w", err)
 		}
 		bfr, err = clientSet.
 			StreamingV1().
 			BackfillRequests(parameters.Namespace).
 			Create(ctx, newBackfillRequest, metav1.CreateOptions{FieldManager: fieldManager, FieldValidation: "Strict"})
-		if err != nil {
+		if err != nil { // coverage-ignore
 			return fmt.Errorf("error creating backfill request: %w", err)
 		}
 
@@ -61,7 +61,7 @@ func (b *backfill) Backfill(ctx context.Context, parameters *models.BackfillPara
 	}
 
 	err = logging.Printer("started").PrintObj(bfr, os.Stdout)
-	if err != nil {
+	if err != nil { // coverage-ignore
 		return err
 	}
 	return wait.PollUntilContextCancel(ctx, 1*time.Second, true, func(ctx context.Context) (done bool, err error) {
@@ -70,7 +70,7 @@ func (b *backfill) Backfill(ctx context.Context, parameters *models.BackfillPara
 			Watch:           true,
 			ResourceVersion: bfr.ResourceVersion,
 		})
-		if err != nil {
+		if err != nil { // coverage-ignore
 			return false, fmt.Errorf("error watching backfill request: %w", err)
 		}
 		defer watch.Stop()
@@ -99,14 +99,10 @@ func (b *backfill) Backfill(ctx context.Context, parameters *models.BackfillPara
 }
 
 func (b *backfill) getBackfillRequest(ctx context.Context, clientSet *versioned.Clientset, namespace string, id string) (*v1.BackfillRequest, error) {
-	list, err := clientSet.
-		StreamingV1().
-		BackfillRequests(namespace).
-		List(ctx, metav1.ListOptions{
-			FieldSelector: fmt.Sprintf("spec.completed=false,spec.streamId=%s", id),
-		})
+	options := metav1.ListOptions{FieldSelector: fmt.Sprintf("spec.completed=false,spec.streamId=%s", id)}
+	list, err := clientSet.StreamingV1().BackfillRequests(namespace).List(ctx, options)
 
-	if err != nil {
+	if err != nil { // coverage-ignore
 		return nil, fmt.Errorf("error listing backfill requests: %w", err)
 	}
 

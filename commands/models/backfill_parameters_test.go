@@ -40,7 +40,8 @@ func TestBackfillParameters_ToBackfillRequest_WithOverrides(t *testing.T) {
 		},
 	}
 
-	request := parameters.ToBackfillRequest()
+	request, err := parameters.ToBackfillRequest()
+	require.NoError(t, err)
 	require.Equal(t, "stream-id-manual-", request.GenerateName)
 	require.Equal(t, "stream-class", request.Spec.StreamClass)
 	require.Equal(t, "stream-id", request.Spec.StreamId)
@@ -60,7 +61,7 @@ func TestBackfillParameters_ToBackfillRequest_WithOverrides(t *testing.T) {
 }
 
 func TestGeneratePayload_IgnoresNonSpecAndHandlesConflicts(t *testing.T) {
-	payload := generatePayload(&[]string{
+	payload, err := generatePayload(&[]string{
 		".spec.a=value",
 		".spec.a.b=nested-value",
 		".spec.empty",
@@ -68,6 +69,7 @@ func TestGeneratePayload_IgnoresNonSpecAndHandlesConflicts(t *testing.T) {
 		"spec.alsoIgnored=ignored",
 	})
 
+	require.NoError(t, err)
 	require.NotNil(t, payload)
 	require.NotEmpty(t, payload.Raw)
 

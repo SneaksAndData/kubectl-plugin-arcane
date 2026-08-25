@@ -3,7 +3,6 @@ package models
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/SneaksAndData/arcane-operator/pkg/apis/streaming/v1"
@@ -46,22 +45,27 @@ func NewBackfillParameters(cmd *cobra.Command, args []string, configFlags *gener
 	return bfr, nil
 }
 
-func (p BackfillParameters) ToBackfillRequest() *v1.BackfillRequest {
-	return &v1.BackfillRequest{
+func (p BackfillParameters) ToBackfillRequest() (*v1.BackfillRequest, error) {
+	newPayload, err := generatePayload(p.overrides)
+	if err != nil {
+		return nil, err
+	}
+	bfr := &v1.BackfillRequest{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: fmt.Sprintf("%s-manual-", p.StreamId),
 		},
 		Spec: v1.BackfillRequestSpec{
 			StreamClass: p.StreamClass,
 			StreamId:    p.StreamId,
-			Payload:     generatePayload(p.overrides),
+			Payload:     newPayload,
 		},
 	}
+	return bfr, nil
 }
 
-func generatePayload(overrides *[]string) *runtime.RawExtension {
+func generatePayload(overrides *[]string) (*runtime.RawExtension, error) {
 	if overrides == nil {
-		return nil
+		return nil, nil
 	}
 	nestedSpecMap := make(map[string]interface{})
 	for _, kv := range *overrides {
@@ -80,12 +84,11 @@ func generatePayload(overrides *[]string) *runtime.RawExtension {
 
 	jsonBytes, err := json.Marshal(nestedSpecMap)
 	if err != nil {
-		fmt.Printf("Error building spec JSON: %v\n", err)
-		os.Exit(1)
+		return nil, fmt.Errorf("error building spec JSON: %w", err)
 	}
 
 	// 3. Inject raw bytes directly into the runtime.RawExtension
-	return &runtime.RawExtension{Raw: jsonBytes}
+	return &runtime.RawExtension{Raw: jsonBytes}, nil
 }
 
 func setNestedValue(m map[string]interface{}, path string, value interface{}) {

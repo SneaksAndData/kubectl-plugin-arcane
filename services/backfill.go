@@ -41,13 +41,14 @@ func (b *backfill) Backfill(ctx context.Context, parameters *models.BackfillPara
 		return fmt.Errorf("error checking for existence of an backfill request: %w", err)
 	}
 	if bfr == nil {
+		newBackfillRequest, err := parameters.ToBackfillRequest()
+		if err != nil {
+			return fmt.Errorf("error converting parameters to backfill request: %w", err)
+		}
 		bfr, err = clientSet.
 			StreamingV1().
 			BackfillRequests(parameters.Namespace).
-			Create(ctx, parameters.ToBackfillRequest(), metav1.CreateOptions{
-				FieldManager:    fieldManager,
-				FieldValidation: "Strict",
-			})
+			Create(ctx, newBackfillRequest, metav1.CreateOptions{FieldManager: fieldManager, FieldValidation: "Strict"})
 		if err != nil {
 			return fmt.Errorf("error creating backfill request: %w", err)
 		}

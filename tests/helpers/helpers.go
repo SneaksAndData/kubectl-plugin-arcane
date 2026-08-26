@@ -1,8 +1,13 @@
 package helpers
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"os/exec"
+	"strings"
+	"testing"
+
 	mockv1 "github.com/SneaksAndData/arcane-stream-mock/pkg/apis/streaming/v1"
 	mockversionedv1 "github.com/SneaksAndData/arcane-stream-mock/pkg/generated/clientset/versioned"
 	"github.com/stretchr/testify/require"
@@ -10,9 +15,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	"os/exec"
-	"strings"
-	"testing"
 )
 
 func NewTestStream(t *testing.T, clientSet *mockversionedv1.Clientset, configure func(*mockv1.TestStreamDefinition)) string {
@@ -58,6 +60,21 @@ func NewTestStream(t *testing.T, clientSet *mockversionedv1.Clientset, configure
 	require.NoError(t, err)
 
 	return stream.Name
+}
+
+func UnsuspendTestStreamDefinition(ctx context.Context, clientSet *mockversionedv1.Clientset, namespace string, name string) error {
+	testStreamDefinition, err := clientSet.StreamingV1().TestStreamDefinitions(namespace).Get(ctx, name, metav1.GetOptions{})
+	if err != nil {
+		return fmt.Errorf("error reading test stream definition %s/%s: %w", namespace, name, err)
+	}
+
+	testStreamDefinition.Spec.Suspended = false
+	_, err = clientSet.StreamingV1().TestStreamDefinitions(namespace).Update(ctx, testStreamDefinition, metav1.UpdateOptions{})
+	if err != nil {
+		return fmt.Errorf("error updating test stream definition %s/%s: %w", namespace, name, err)
+	}
+
+	return nil
 }
 
 func GetKubeconfigString(kubeconfigCmd string) ([]byte, error) {

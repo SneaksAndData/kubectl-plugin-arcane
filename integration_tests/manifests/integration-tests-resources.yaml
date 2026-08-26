@@ -19,3 +19,25 @@ kind: ServiceAccount
 metadata:
   name: arcane-stream-mock
   namespace: integration-tests
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: arcane-operator-events-writer
+rules:
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "patch", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: arcane-operator-events-writer
+subjects:
+  - kind: ServiceAccount
+    name: arcane-operator
+    namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: arcane-operator-events-writer

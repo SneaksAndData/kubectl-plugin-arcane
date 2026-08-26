@@ -63,17 +63,13 @@ func NewTestStream(t *testing.T, clientSet *mockversionedv1.Clientset, configure
 }
 
 func UnsuspendTestStreamDefinition(ctx context.Context, clientSet *mockversionedv1.Clientset, namespace string, name string) error {
-	testStreamDefinition, err := clientSet.StreamingV1().
-		TestStreamDefinitions(namespace).
-		Get(ctx, name, metav1.GetOptions{})
+	testStreamDefinition, err := clientSet.StreamingV1().TestStreamDefinitions(namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
 		return fmt.Errorf("error reading test stream definition %s/%s: %w", namespace, name, err)
 	}
 
 	testStreamDefinition.Spec.Suspended = false
-	_, err = clientSet.StreamingV1().
-		TestStreamDefinitions(namespace).
-		Update(ctx, testStreamDefinition, metav1.UpdateOptions{})
+	_, err = clientSet.StreamingV1().TestStreamDefinitions(namespace).Update(ctx, testStreamDefinition, metav1.UpdateOptions{})
 	if err != nil {
 		return fmt.Errorf("error updating test stream definition %s/%s: %w", namespace, name, err)
 	}

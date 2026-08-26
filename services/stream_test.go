@@ -16,7 +16,6 @@ import (
 
 func Test_StreamStarted(t *testing.T) {
 	name := helpers.NewTestStream(t, clientSet, func(def *v1.TestStreamDefinition) {
-		def.Spec.ShouldFail = false
 		def.Spec.RunDuration = "15s"
 		def.Spec.Suspended = true
 	})
@@ -44,7 +43,6 @@ func Test_StreamStarted(t *testing.T) {
 
 func Test_StreamStarted_Error(t *testing.T) {
 	name := helpers.NewTestStream(t, clientSet, func(def *v1.TestStreamDefinition) {
-		def.Spec.ShouldFail = false
 		def.Spec.RunDuration = "5s"
 		def.Spec.Suspended = false
 	})
@@ -68,7 +66,6 @@ func Test_StreamStarted_Error(t *testing.T) {
 
 func Test_StreamStopped(t *testing.T) {
 	name := helpers.NewTestStream(t, clientSet, func(def *v1.TestStreamDefinition) {
-		def.Spec.ShouldFail = false
 		def.Spec.RunDuration = "15s"
 		def.Spec.Suspended = false
 	})
@@ -95,7 +92,6 @@ func Test_StreamStopped(t *testing.T) {
 
 func Test_StreamStopped_Error(t *testing.T) {
 	name := helpers.NewTestStream(t, clientSet, func(def *v1.TestStreamDefinition) {
-		def.Spec.ShouldFail = false
 		def.Spec.RunDuration = "15s"
 		def.Spec.Suspended = true
 	})

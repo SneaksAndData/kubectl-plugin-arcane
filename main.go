@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/services"
@@ -45,7 +48,10 @@ func main() {
 		fx.NopLogger,
 		fx.Invoke(
 			func(rootCmd commands.RootCommand, shutDowner fx.Shutdowner, lifeCycle fx.Lifecycle) error {
-				err := rootCmd.GetCommand().ExecuteContext(context.TODO())
+				ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+				defer cancel()
+
+				err := rootCmd.GetCommand().ExecuteContext(ctx)
 				defer func() {
 					shErr := shutDowner.Shutdown()
 					if shErr != nil {

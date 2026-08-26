@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	mockv1 "github.com/SneaksAndData/arcane-stream-mock/pkg/apis/streaming/v1"
+	mockv2 "github.com/SneaksAndData/arcane-stream-mock/pkg/apis/streaming/v2"
 	mockversionedv1 "github.com/SneaksAndData/arcane-stream-mock/pkg/generated/clientset/versioned"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
@@ -56,6 +57,56 @@ func NewTestStream(t *testing.T, clientSet *mockversionedv1.Clientset, configure
 	stream, err := clientSet.
 		StreamingV1().
 		TestStreamDefinitions(testStream.Namespace).
+		Create(t.Context(), &testStream, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	return stream.Name
+}
+
+func NewTestStreamV2(t *testing.T, clientSet *mockversionedv1.Clientset, configure func(v2 *mockv2.TestStreamDefinitionV2)) string {
+	testStream := mockv2.TestStreamDefinitionV2{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "streaming.sneaksanddata.com/v1",
+			Kind:       "TestStreamDefinition",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: "test-stream-",
+			Namespace:    "default",
+		},
+		Spec: mockv2.TestsStreamDefinitionSpec{
+			Source:      "mock-source",
+			Destination: "mock-destination",
+			ShouldFail:  false,
+			ExecutionSettings: mockv2.ExecutionSettings{
+				StreamingBackend: mockv2.StreamingBackend{
+					BatchJobBackend: &mockv2.BatchJobBackend{
+						JobTemplateRef: corev1.ObjectReference{
+							APIVersion: "streaming.sneaksanddata.com/v1",
+							Kind:       "StreamingJobTemplate",
+							Name:       "arcane-stream-mock",
+							Namespace:  "default",
+						},
+						BackfillJobTemplateRef: &corev1.ObjectReference{
+							APIVersion: "streaming.sneaksanddata.com/v1",
+							Kind:       "StreamingJobTemplate",
+							Name:       "arcane-stream-mock",
+							Namespace:  "default",
+						},
+					},
+				},
+			},
+			RunDuration: "5s",
+			TestSecretRef: &corev1.LocalObjectReference{
+				Name: "test-secret",
+			},
+		},
+	}
+
+	configure(&testStream)
+
+	stream, err := clientSet.
+		StreamingV2().
+		TestStreamDefinitionV2s(testStream.Namespace).
 		Create(t.Context(), &testStream, metav1.CreateOptions{})
 	require.NoError(t, err)
 

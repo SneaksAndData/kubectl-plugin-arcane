@@ -17,7 +17,10 @@ import (
 )
 
 func Test_Backfill(t *testing.T) {
-	name := createTestStreamDefinition(t, false, "5s", true)
+	name := helpers.NewTestStream(t, clientSet, func(def *mockv1.TestStreamDefinition) {
+		def.Spec.RunDuration = "5s"
+		def.Spec.Suspended = true
+	})
 	require.NotEmpty(t, name)
 
 	clientSet := versionedv1.NewForConfigOrDie(kubeConfig)
@@ -36,7 +39,10 @@ func Test_Backfill(t *testing.T) {
 }
 
 func Test_Backfill_Wait(t *testing.T) {
-	name := createTestStreamDefinition(t, false, "5s", false)
+	name := helpers.NewTestStream(t, clientSet, func(def *mockv1.TestStreamDefinition) {
+		def.Spec.RunDuration = "5s"
+		def.Spec.Suspended = false
+	})
 	require.NotEmpty(t, name)
 
 	clientSet := versionedv1.NewForConfigOrDie(kubeConfig)
@@ -115,7 +121,10 @@ func Test_Backfill_CompletedDuplicate(t *testing.T) {
 }
 
 func Test_Backfill_Cancelled(t *testing.T) {
-	name := createTestStreamDefinition(t, false, "30s", true)
+	name := helpers.NewTestStream(t, clientSet, func(def *mockv1.TestStreamDefinition) {
+		def.Spec.RunDuration = "30s"
+		def.Spec.Suspended = true
+	})
 	require.NotEmpty(t, name)
 
 	clientSet := versionedv1.NewForConfigOrDie(kubeConfig)

@@ -4,7 +4,9 @@ import (
 	"testing"
 
 	streamapis "github.com/SneaksAndData/arcane-operator/services/controllers/stream"
+	"github.com/SneaksAndData/arcane-stream-mock/pkg/apis/streaming/v1"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/models"
+	"github.com/sneaksAndData/kubectl-plugin-arcane/tests/helpers"
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -13,7 +15,11 @@ import (
 )
 
 func Test_StreamStarted(t *testing.T) {
-	name := createTestStreamDefinition(t, false, "15s", true)
+	name := helpers.NewTestStream(t, clientSet, func(def *v1.TestStreamDefinition) {
+		def.Spec.ShouldFail = false
+		def.Spec.RunDuration = "15s"
+		def.Spec.Suspended = true
+	})
 	require.NotEmpty(t, name)
 
 	err := waitForPhase(t, name, streamapis.Suspended)
@@ -37,7 +43,11 @@ func Test_StreamStarted(t *testing.T) {
 }
 
 func Test_StreamStarted_Error(t *testing.T) {
-	name := createTestStreamDefinition(t, false, "5s", false)
+	name := helpers.NewTestStream(t, clientSet, func(def *v1.TestStreamDefinition) {
+		def.Spec.ShouldFail = false
+		def.Spec.RunDuration = "5s"
+		def.Spec.Suspended = false
+	})
 	require.NotEmpty(t, name)
 	err := waitForPhase(t, name, streamapis.Running)
 	require.NoError(t, err)
@@ -57,7 +67,11 @@ func Test_StreamStarted_Error(t *testing.T) {
 }
 
 func Test_StreamStopped(t *testing.T) {
-	name := createTestStreamDefinition(t, false, "15s", false)
+	name := helpers.NewTestStream(t, clientSet, func(def *v1.TestStreamDefinition) {
+		def.Spec.ShouldFail = false
+		def.Spec.RunDuration = "15s"
+		def.Spec.Suspended = false
+	})
 	require.NotEmpty(t, name)
 	err := waitForPhase(t, name, streamapis.Running)
 	require.NoError(t, err)
@@ -80,7 +94,11 @@ func Test_StreamStopped(t *testing.T) {
 }
 
 func Test_StreamStopped_Error(t *testing.T) {
-	name := createTestStreamDefinition(t, false, "15s", true)
+	name := helpers.NewTestStream(t, clientSet, func(def *v1.TestStreamDefinition) {
+		def.Spec.ShouldFail = false
+		def.Spec.RunDuration = "15s"
+		def.Spec.Suspended = true
+	})
 	require.NotEmpty(t, name)
 	err := waitForPhase(t, name, streamapis.Suspended)
 	require.NoError(t, err)

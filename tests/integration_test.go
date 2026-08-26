@@ -62,7 +62,7 @@ func Test_Backfill_Wait(t *testing.T) {
 		func(def *mockv1.TestStreamDefinition) {
 			def.Namespace = "integration-tests"
 			def.Spec.RunDuration = "5s"
-			def.Spec.Suspended = true
+			def.Spec.Suspended = false
 			def.Spec.ShouldFail = false
 			def.GenerateName = "integration-test-backfill-wait-"
 		},

@@ -91,6 +91,7 @@ func Test_StreamStopped(t *testing.T) {
 func Test_StreamStopped_Error(t *testing.T) {
 	name := helpers.NewTestStream(t, clientSet, func(def *v2.TestStreamDefinitionV2) {
 		def.Spec.RunDuration = "15s"
+		def.Spec.ExecutionSettings.Suspended = true
 	})
 	require.NotEmpty(t, name)
 	err := waitForPhase(t, name, streamapis.Suspended)

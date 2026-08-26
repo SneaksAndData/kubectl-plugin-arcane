@@ -27,10 +27,11 @@ func Test_Backfill_existing_stream_definition(t *testing.T) {
 	err = backfillService.Backfill(t.Context(), &models.BackfillParameters{
 		Namespace:   "default",
 		StreamId:    name,
-		StreamClass: "arcane-stream-mock",
+		StreamClass: testStreamClass,
 		Wait:        false,
 	})
 	require.NoError(t, err)
+
 	bfr, err := findBackfillRequestByName(t.Context(), "default", name)
 	require.NoError(t, err)
 	require.False(t, bfr.Spec.Completed)
@@ -46,10 +47,10 @@ func Test_Backfill_no_stream_definition(t *testing.T) {
 	err = backfillService.Backfill(t.Context(), &models.BackfillParameters{
 		Namespace:   "default",
 		StreamId:    "invalid-stream-id",
-		StreamClass: "arcane-stream-mock",
+		StreamClass: testStreamClass,
 		Wait:        false,
 	})
-	require.EqualError(t, err, "error fetching stream definition: teststreamdefinitions.streaming.sneaksanddata.com \"invalid-stream-id\" not found")
+	require.EqualError(t, err, "error fetching stream definition: teststreamdefinitionv2s.streaming.sneaksanddata.com \"invalid-stream-id\" not found")
 	bfr, err := findBackfillRequestByName(t.Context(), "default", "invalid-stream-id")
 	require.Error(t, err)
 	require.Nil(t, bfr)

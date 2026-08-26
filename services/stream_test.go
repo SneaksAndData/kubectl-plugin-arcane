@@ -46,6 +46,7 @@ func Test_StreamStarted_Error(t *testing.T) {
 		def.Spec.RunDuration = "5s"
 	})
 	require.NotEmpty(t, name)
+
 	err := waitForPhase(t, name, streamapis.Running)
 	require.NoError(t, err)
 

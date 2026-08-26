@@ -28,7 +28,7 @@ func Test_Start(t *testing.T) {
 			def.GenerateName = "integration-test-start-"
 		},
 		nil,
-		"kubectl arcane stream start arcane-stream-mock %s --namespace integration-tests",
+		"kubectl arcane stream start arcane-stream-mock-v2 %s --namespace integration-tests",
 	)
 }
 
@@ -41,7 +41,7 @@ func Test_Stop(t *testing.T) {
 			def.GenerateName = "integration-test-stop-"
 		},
 		nil,
-		"kubectl arcane stream stop arcane-stream-mock %s --namespace integration-tests",
+		"kubectl arcane stream stop arcane-stream-mock-v2 %s --namespace integration-tests",
 	)
 }
 
@@ -55,7 +55,7 @@ func Test_Backfill(t *testing.T) {
 			def.GenerateName = "integration-test-backfill-"
 		},
 		nil,
-		"kubectl arcane stream backfill arcane-stream-mock %s --namespace integration-tests",
+		"kubectl arcane stream backfill arcane-stream-mock-v2 %s --namespace integration-tests",
 	)
 }
 
@@ -70,7 +70,7 @@ func Test_Backfill_Wait(t *testing.T) {
 		func(ctx context.Context, clientSet *mockversionedv1.Clientset, namespace string, name string) error {
 			return helpers.UnsuspendTestStreamDefinition(ctx, clientSet, name, namespace)
 		},
-		"kubectl arcane stream backfill arcane-stream-mock %s --wait --namespace integration-tests",
+		"kubectl arcane stream backfill arcane-stream-mock-v2 %s --wait --namespace integration-tests",
 	)
 }
 
@@ -83,7 +83,7 @@ func Test_DowntimeDeclare(t *testing.T) {
 			def.GenerateName = "integration-downtime-declare-"
 		},
 		nil,
-		"kubectl arcane downtime declare arcane-stream-mock %s downtime-window-1 --namespace integration-tests",
+		"kubectl arcane downtime declare arcane-stream-mock-v2 %s downtime-window-1 --namespace integration-tests",
 	)
 }
 
@@ -103,7 +103,7 @@ func Test_DowntimeStop(t *testing.T) {
 			def.GenerateName = "integration-downtime-declare-"
 		},
 		nil,
-		"kubectl arcane downtime stop arcane-stream-mock downtime-window-1 --namespace integration-tests",
+		"kubectl arcane downtime stop arcane-stream-mock-v2 downtime-window-1 --namespace integration-tests",
 	)
 }
 

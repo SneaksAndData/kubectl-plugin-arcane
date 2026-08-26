@@ -83,9 +83,9 @@ func Test_StreamStopped(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	stream, err := clientSet.StreamingV1().TestStreamDefinitions("default").Get(t.Context(), name, metav1.GetOptions{})
+	stream, err := clientSet.StreamingV2().TestStreamDefinitionV2s("default").Get(t.Context(), name, metav1.GetOptions{})
 	require.NoError(t, err)
-	require.True(t, stream.Spec.Suspended)
+	require.True(t, stream.Spec.ExecutionSettings.Suspended)
 }
 
 func Test_StreamStopped_Error(t *testing.T) {

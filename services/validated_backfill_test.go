@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	versionedv1 "github.com/SneaksAndData/arcane-operator/pkg/generated/clientset/versioned"
-	"github.com/SneaksAndData/arcane-stream-mock/pkg/apis/streaming/v1"
+	"github.com/SneaksAndData/arcane-stream-mock/pkg/apis/streaming/v2"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/models"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/tests/helpers"
 	"github.com/stretchr/testify/require"
@@ -12,10 +12,10 @@ import (
 )
 
 func Test_Backfill_existing_stream_definition(t *testing.T) {
-	name := helpers.NewTestStream(t, clientSet, func(def *v1.TestStreamDefinition) {
+	name := helpers.NewTestStream(t, clientSet, func(def *v2.TestStreamDefinitionV2) {
 		def.Spec.ShouldFail = false
 		def.Spec.RunDuration = "5s"
-		def.Spec.Suspended = true
+		def.Spec.ExecutionSettings.Suspended = true
 	})
 	require.NotEmpty(t, name)
 

@@ -28,11 +28,11 @@ operator:
         --version v1.1.11
 
 mock-stream-plugin:
-    helm install arcane-stream-mock oci://ghcr.io/sneaksanddata/helm/arcane-stream-mock \
+    helm upgrade --install arcane-stream-mock oci://ghcr.io/sneaksanddata/helm/arcane-stream-mock \
         --namespace default \
         --set jobTemplateSettings.podFailurePolicySettings.retryOnExitCodes="{120,121}" \
         --set jobTemplateSettings.backoffLimit=1 \
-        --version v1.0.14
+        --version v1.0.15-1-g4797fb9
 
 manifests:
     kubectl apply -f integration_tests/manifests/

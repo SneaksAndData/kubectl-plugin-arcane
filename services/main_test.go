@@ -43,6 +43,8 @@ func NewFakeClientProvider(clientSet *versionedv1.Clientset, unstructuredClient 
 	}
 }
 
+const testStreamClass = "arcane-stream-mock-v2"
+
 var (
 	kubeconfigCmd string
 	kubeConfig    *rest.Config
@@ -90,7 +92,7 @@ func findBackfillRequestByName(ctx context.Context, namespace string, name strin
 
 func waitForPhase(t *testing.T, name string, phase streamapis.Phase) error {
 	return wait.PollUntilContextCancel(t.Context(), 1*time.Second, true, func(ctx context.Context) (done bool, err error) {
-		s, err := clientSet.StreamingV1().TestStreamDefinitions("default").Get(t.Context(), name, metav1.GetOptions{})
+		s, err := clientSet.StreamingV2().TestStreamDefinitionV2s("default").Get(t.Context(), name, metav1.GetOptions{})
 		if err != nil {
 			return false, err
 		}

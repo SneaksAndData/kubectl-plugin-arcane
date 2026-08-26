@@ -9,4 +9,4 @@ threshold:
 
 exclude:
   paths:
-    - main.go   # application entry point
+    - main.go # application entry point

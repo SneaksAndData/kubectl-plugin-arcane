@@ -4,13 +4,19 @@ import (
 	"testing"
 
 	versionedv1 "github.com/SneaksAndData/arcane-operator/pkg/generated/clientset/versioned"
+	"github.com/SneaksAndData/arcane-stream-mock/pkg/apis/streaming/v2"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/models"
+	"github.com/sneaksAndData/kubectl-plugin-arcane/tests/helpers"
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func Test_Backfill_existing_stream_definition(t *testing.T) {
-	name := createTestStreamDefinition(t, false, "5s", true)
+	name := helpers.NewTestStream(t, clientSet, func(def *v2.TestStreamDefinitionV2) {
+		def.Spec.ShouldFail = false
+		def.Spec.RunDuration = "5s"
+		def.Spec.ExecutionSettings.Suspended = true
+	})
 	require.NotEmpty(t, name)
 
 	clientSet := versionedv1.NewForConfigOrDie(kubeConfig)
@@ -21,10 +27,11 @@ func Test_Backfill_existing_stream_definition(t *testing.T) {
 	err = backfillService.Backfill(t.Context(), &models.BackfillParameters{
 		Namespace:   "default",
 		StreamId:    name,
-		StreamClass: "arcane-stream-mock",
+		StreamClass: testStreamClass,
 		Wait:        false,
 	})
 	require.NoError(t, err)
+
 	bfr, err := findBackfillRequestByName(t.Context(), "default", name)
 	require.NoError(t, err)
 	require.False(t, bfr.Spec.Completed)
@@ -40,10 +47,10 @@ func Test_Backfill_no_stream_definition(t *testing.T) {
 	err = backfillService.Backfill(t.Context(), &models.BackfillParameters{
 		Namespace:   "default",
 		StreamId:    "invalid-stream-id",
-		StreamClass: "arcane-stream-mock",
+		StreamClass: testStreamClass,
 		Wait:        false,
 	})
-	require.EqualError(t, err, "error fetching stream definition: teststreamdefinitions.streaming.sneaksanddata.com \"invalid-stream-id\" not found")
+	require.EqualError(t, err, "error fetching stream definition: teststreamdefinitionv2s.streaming.sneaksanddata.com \"invalid-stream-id\" not found")
 	bfr, err := findBackfillRequestByName(t.Context(), "default", "invalid-stream-id")
 	require.Error(t, err)
 	require.Nil(t, bfr)

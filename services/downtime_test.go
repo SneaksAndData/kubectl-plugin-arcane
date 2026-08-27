@@ -8,7 +8,7 @@ import (
 
 	versionedv1 "github.com/SneaksAndData/arcane-operator/pkg/generated/clientset/versioned"
 	streamapis "github.com/SneaksAndData/arcane-operator/services/controllers/stream"
-	mockv1 "github.com/SneaksAndData/arcane-stream-mock/pkg/apis/streaming/v1"
+	"github.com/SneaksAndData/arcane-stream-mock/pkg/apis/streaming/v2"
 	cmdinterfaces "github.com/sneaksAndData/kubectl-plugin-arcane/commands/interfaces"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/models"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/services/interfaces"
@@ -23,9 +23,9 @@ func TestDowntime_DeclareDowntime(t *testing.T) {
 	// Arrange
 	pattern := "declare-downtime-test-"
 
-	name := helpers.NewTestStream(t, clientSet, func(def *mockv1.TestStreamDefinition) {
+	name := helpers.NewTestStream(t, clientSet, func(def *v2.TestStreamDefinitionV2) {
 		def.Spec.RunDuration = "5s"
-		def.Spec.Suspended = true
+		def.Spec.ExecutionSettings.Suspended = true
 		def.Spec.ShouldFail = false
 		def.GenerateName = pattern
 	})
@@ -41,14 +41,14 @@ func TestDowntime_DeclareDowntime(t *testing.T) {
 
 	// Act
 	err = downtimeService.DeclareDowntime(t.Context(), &models.DowntimeDeclareParameters{
-		StreamClass: "arcane-stream-mock",
+		StreamClass: testStreamClass,
 		DowntimeKey: "maintenance-window-1",
 		Prefix:      pattern,
 	})
 	require.NoError(t, err)
 
 	// Assert
-	s, err := clientSet.StreamingV1().TestStreamDefinitions("default").Get(t.Context(), name, metav1.GetOptions{})
+	s, err := clientSet.StreamingV2().TestStreamDefinitionV2s("default").Get(t.Context(), name, metav1.GetOptions{})
 	require.NoError(t, err)
 
 	err = waitForPhase(t, name, streamapis.Suspended)
@@ -61,7 +61,7 @@ func TestDowntime_StopDowntime(t *testing.T) {
 	// Arrange
 	pattern := "stop-downtime-test-"
 
-	name := helpers.NewTestStream(t, clientSet, func(def *mockv1.TestStreamDefinition) {
+	name := helpers.NewTestStream(t, clientSet, func(def *v2.TestStreamDefinitionV2) {
 		def.Labels = map[string]string{
 			interfaces.DowntimeLabelKey: "maintenance-window-1",
 		}
@@ -69,7 +69,7 @@ func TestDowntime_StopDowntime(t *testing.T) {
 			interfaces.DowntimeBeginAnnotationKey: time.Now().UTC().Format(time.RFC3339),
 		}
 		def.Spec.RunDuration = "5s"
-		def.Spec.Suspended = true
+		def.Spec.ExecutionSettings.Suspended = true
 		def.Spec.ShouldFail = false
 		def.GenerateName = pattern
 	})
@@ -82,7 +82,7 @@ func TestDowntime_StopDowntime(t *testing.T) {
 
 	// Act
 	err = downtimeService.StopDowntime(t.Context(), &models.DowntimeStopParameters{
-		StreamClass: "arcane-stream-mock",
+		StreamClass: testStreamClass,
 		DowntimeKey: "maintenance-window-1",
 	})
 	require.NoError(t, err)
@@ -91,11 +91,11 @@ func TestDowntime_StopDowntime(t *testing.T) {
 	err = waitForPhase(t, name, streamapis.Suspended)
 	require.NoError(t, err)
 
-	s, err := clientSet.StreamingV1().TestStreamDefinitions("default").Get(t.Context(), name, metav1.GetOptions{})
+	s, err := clientSet.StreamingV2().TestStreamDefinitionV2s("default").Get(t.Context(), name, metav1.GetOptions{})
 	require.NoError(t, err)
 	require.NotContains(t, s.Labels, interfaces.DowntimeLabelKey)
 	require.NotContains(t, s.Annotations, interfaces.DowntimeBeginAnnotationKey)
-	require.False(t, s.Spec.Suspended)
+	require.False(t, s.Spec.ExecutionSettings.Suspended)
 }
 
 func TestDowntime_List_NoFilter(t *testing.T) {
@@ -104,14 +104,14 @@ func TestDowntime_List_NoFilter(t *testing.T) {
 	pattern := "list-downtime-test-"
 
 	for i := range streamCount {
-		name := helpers.NewTestStream(t, clientSet, func(def *mockv1.TestStreamDefinition) {
+		name := helpers.NewTestStream(t, clientSet, func(def *v2.TestStreamDefinitionV2) {
 			def.Labels = map[string]string{
 				interfaces.DowntimeLabelKey: fmt.Sprintf("maintenance-window-%d", i),
 			}
 			def.Annotations = map[string]string{
 				interfaces.DowntimeBeginAnnotationKey: time.Now().UTC().Format(time.RFC3339),
 			}
-			def.Spec.Suspended = true
+			def.Spec.ExecutionSettings.Suspended = true
 			def.GenerateName = pattern
 		})
 		require.NotEmpty(t, name)
@@ -140,14 +140,14 @@ func TestDowntime_Details_NoFilter(t *testing.T) {
 	pattern := "details-downtime-test-"
 
 	for i := range streamCount {
-		name := helpers.NewTestStream(t, clientSet, func(def *mockv1.TestStreamDefinition) {
+		name := helpers.NewTestStream(t, clientSet, func(def *v2.TestStreamDefinitionV2) {
 			def.Labels = map[string]string{
 				interfaces.DowntimeLabelKey: fmt.Sprintf("details-maintenance-window-%d", i),
 			}
 			def.Annotations = map[string]string{
 				interfaces.DowntimeBeginAnnotationKey: time.Now().UTC().Format(time.RFC3339),
 			}
-			def.Spec.Suspended = true
+			def.Spec.ExecutionSettings.Suspended = true
 			def.GenerateName = pattern
 		})
 		require.NotEmpty(t, name)
@@ -183,8 +183,8 @@ func createDowntimeService(t *testing.T) cmdinterfaces.DowntimeService {
 
 func WakeUp(t *testing.T, name string) error {
 	// First, patch the stream to unsuspend it
-	patchData := []byte(`{"spec":{"suspended":false}}`)
-	_, err := clientSet.StreamingV1().TestStreamDefinitions("default").Patch(
+	patchData := []byte(`{"spec":{"execution": {"suspended":false}}}`)
+	_, err := clientSet.StreamingV2().TestStreamDefinitionV2s("default").Patch(
 		t.Context(),
 		name,
 		types.MergePatchType,

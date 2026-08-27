@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	mockv1 "github.com/SneaksAndData/arcane-stream-mock/pkg/apis/streaming/v1"
+	"github.com/SneaksAndData/arcane-stream-mock/pkg/apis/streaming/v2"
 	mockversionedv1 "github.com/SneaksAndData/arcane-stream-mock/pkg/generated/clientset/versioned"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/services/interfaces"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/tests/helpers"
@@ -20,79 +20,76 @@ import (
 
 func Test_Start(t *testing.T) {
 	runIntegrationTest(t,
-		func(def *mockv1.TestStreamDefinition) {
+		func(def *v2.TestStreamDefinitionV2) {
 			def.Namespace = "integration-tests"
 			def.Spec.RunDuration = "5s"
-			def.Spec.Suspended = true
+			def.Spec.ExecutionSettings.Suspended = true
 			def.Spec.ShouldFail = false
 			def.GenerateName = "integration-test-start-"
 		},
 		nil,
-		"kubectl arcane stream start arcane-stream-mock %s --namespace integration-tests",
+		"kubectl arcane stream start arcane-stream-mock-v2 %s --namespace integration-tests",
 	)
 }
 
 func Test_Stop(t *testing.T) {
 	runIntegrationTest(t,
-		func(def *mockv1.TestStreamDefinition) {
+		func(def *v2.TestStreamDefinitionV2) {
 			def.Namespace = "integration-tests"
 			def.Spec.RunDuration = "5s"
-			def.Spec.Suspended = false
 			def.Spec.ShouldFail = false
 			def.GenerateName = "integration-test-stop-"
 		},
 		nil,
-		"kubectl arcane stream stop arcane-stream-mock %s --namespace integration-tests",
+		"kubectl arcane stream stop arcane-stream-mock-v2 %s --namespace integration-tests",
 	)
 }
 
 func Test_Backfill(t *testing.T) {
 	runIntegrationTest(t,
-		func(def *mockv1.TestStreamDefinition) {
+		func(def *v2.TestStreamDefinitionV2) {
 			def.Namespace = "integration-tests"
 			def.Spec.RunDuration = "5s"
-			def.Spec.Suspended = true
+			def.Spec.ExecutionSettings.Suspended = true
 			def.Spec.ShouldFail = false
 			def.GenerateName = "integration-test-backfill-"
 		},
 		nil,
-		"kubectl arcane stream backfill arcane-stream-mock %s --namespace integration-tests",
+		"kubectl arcane stream backfill arcane-stream-mock-v2 %s --namespace integration-tests",
 	)
 }
 
 func Test_Backfill_Wait(t *testing.T) {
 	runIntegrationTest(t,
-		func(def *mockv1.TestStreamDefinition) {
+		func(def *v2.TestStreamDefinitionV2) {
 			def.Namespace = "integration-tests"
 			def.Spec.RunDuration = "5s"
-			def.Spec.Suspended = false
 			def.Spec.ShouldFail = false
 			def.GenerateName = "integration-test-backfill-wait-"
 		},
 		func(ctx context.Context, clientSet *mockversionedv1.Clientset, namespace string, name string) error {
 			return helpers.UnsuspendTestStreamDefinition(ctx, clientSet, name, namespace)
 		},
-		"kubectl arcane stream backfill arcane-stream-mock %s --wait --namespace integration-tests",
+		"kubectl arcane stream backfill arcane-stream-mock-v2 %s --wait --namespace integration-tests",
 	)
 }
 
 func Test_DowntimeDeclare(t *testing.T) {
 	runIntegrationTest(t,
-		func(def *mockv1.TestStreamDefinition) {
+		func(def *v2.TestStreamDefinitionV2) {
 			def.Namespace = "integration-tests"
 			def.Spec.RunDuration = "5s"
-			def.Spec.Suspended = false
 			def.Spec.ShouldFail = false
 			def.GenerateName = "integration-downtime-declare-"
 		},
 		nil,
-		"kubectl arcane downtime declare arcane-stream-mock %s downtime-window-1 --namespace integration-tests",
+		"kubectl arcane downtime declare arcane-stream-mock-v2 %s downtime-window-1 --namespace integration-tests",
 	)
 }
 
 func Test_DowntimeStop(t *testing.T) {
 	runIntegrationTest(t,
-		func(def *mockv1.TestStreamDefinition) {
+		func(def *v2.TestStreamDefinitionV2) {
 			def.Namespace = "integration-tests"
 			def.Labels = map[string]string{
 				interfaces.DowntimeLabelKey: "maintenance-window-1",
@@ -101,18 +98,18 @@ func Test_DowntimeStop(t *testing.T) {
 				interfaces.DowntimeBeginAnnotationKey: time.Now().UTC().Format(time.RFC3339),
 			}
 			def.Spec.RunDuration = "5s"
-			def.Spec.Suspended = true
+			def.Spec.ExecutionSettings.Suspended = true
 			def.Spec.ShouldFail = false
 			def.GenerateName = "integration-downtime-declare-"
 		},
 		nil,
-		"kubectl arcane downtime stop arcane-stream-mock downtime-window-1 --namespace integration-tests",
+		"kubectl arcane downtime stop arcane-stream-mock-v2 downtime-window-1 --namespace integration-tests",
 	)
 }
 
 func Test_DowntimeList(t *testing.T) {
 	runIntegrationTest(t,
-		func(def *mockv1.TestStreamDefinition) {
+		func(def *v2.TestStreamDefinitionV2) {
 			def.Namespace = "integration-tests"
 			def.Labels = map[string]string{
 				interfaces.DowntimeLabelKey: "maintenance-window-1",
@@ -121,7 +118,7 @@ func Test_DowntimeList(t *testing.T) {
 				interfaces.DowntimeBeginAnnotationKey: time.Now().UTC().Format(time.RFC3339),
 			}
 			def.Spec.RunDuration = "5s"
-			def.Spec.Suspended = true
+			def.Spec.ExecutionSettings.Suspended = true
 			def.Spec.ShouldFail = false
 			def.GenerateName = "integration-downtime-list-"
 		},
@@ -132,7 +129,7 @@ func Test_DowntimeList(t *testing.T) {
 
 func Test_DowntimeDetails(t *testing.T) {
 	runIntegrationTest(t,
-		func(def *mockv1.TestStreamDefinition) {
+		func(def *v2.TestStreamDefinitionV2) {
 			def.Namespace = "integration-tests"
 			def.Labels = map[string]string{
 				interfaces.DowntimeLabelKey: "maintenance-window-1",
@@ -141,7 +138,7 @@ func Test_DowntimeDetails(t *testing.T) {
 				interfaces.DowntimeBeginAnnotationKey: time.Now().UTC().Format(time.RFC3339),
 			}
 			def.Spec.RunDuration = "5s"
-			def.Spec.Suspended = true
+			def.Spec.ExecutionSettings.Suspended = true
 			def.Spec.ShouldFail = false
 			def.GenerateName = "integration-downtime-details-"
 		},
@@ -215,7 +212,7 @@ func runCommand(ctx context.Context, args string) ([]byte, error) {
 	return cmd.CombinedOutput()
 }
 
-func runIntegrationTest(t *testing.T, setup func(def *mockv1.TestStreamDefinition), before func(context.Context, *mockversionedv1.Clientset, string, string) error, commandTemplate string) {
+func runIntegrationTest(t *testing.T, setup func(def *v2.TestStreamDefinitionV2), before func(context.Context, *mockversionedv1.Clientset, string, string) error, commandTemplate string) {
 	name := helpers.NewTestStream(t, clientSet, setup)
 	require.NotEmpty(t, name)
 

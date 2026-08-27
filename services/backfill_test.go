@@ -9,7 +9,7 @@ import (
 
 	versionedv1 "github.com/SneaksAndData/arcane-operator/pkg/generated/clientset/versioned"
 	streamapis "github.com/SneaksAndData/arcane-operator/services/controllers/stream"
-	mockv1 "github.com/SneaksAndData/arcane-stream-mock/pkg/apis/streaming/v1"
+	"github.com/SneaksAndData/arcane-stream-mock/pkg/apis/streaming/v2"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/models"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/tests/helpers"
 	"github.com/stretchr/testify/require"
@@ -17,7 +17,10 @@ import (
 )
 
 func Test_Backfill(t *testing.T) {
-	name := createTestStreamDefinition(t, false, "5s", true)
+	name := helpers.NewTestStream(t, clientSet, func(def *v2.TestStreamDefinitionV2) {
+		def.Spec.RunDuration = "5s"
+		def.Spec.ExecutionSettings.Suspended = true
+	})
 	require.NotEmpty(t, name)
 
 	clientSet := versionedv1.NewForConfigOrDie(kubeConfig)
@@ -36,7 +39,10 @@ func Test_Backfill(t *testing.T) {
 }
 
 func Test_Backfill_Wait(t *testing.T) {
-	name := createTestStreamDefinition(t, false, "5s", false)
+	name := helpers.NewTestStream(t, clientSet, func(def *v2.TestStreamDefinitionV2) {
+		def.Spec.RunDuration = "5s"
+		def.Spec.ExecutionSettings.Suspended = false
+	})
 	require.NotEmpty(t, name)
 
 	clientSet := versionedv1.NewForConfigOrDie(kubeConfig)
@@ -54,9 +60,9 @@ func Test_Backfill_Wait(t *testing.T) {
 }
 
 func Test_Backfill_Duplicate(t *testing.T) {
-	name := helpers.NewTestStream(t, clientSet, func(def *mockv1.TestStreamDefinition) {
+	name := helpers.NewTestStream(t, clientSet, func(def *v2.TestStreamDefinitionV2) {
 		def.Spec.RunDuration = "30m"
-		def.Spec.Suspended = false
+		def.Spec.ExecutionSettings.Suspended = false
 	})
 	require.NotEmpty(t, name)
 
@@ -83,9 +89,9 @@ func Test_Backfill_Duplicate(t *testing.T) {
 }
 
 func Test_Backfill_CompletedDuplicate(t *testing.T) {
-	name := helpers.NewTestStream(t, clientSet, func(def *mockv1.TestStreamDefinition) {
+	name := helpers.NewTestStream(t, clientSet, func(def *v2.TestStreamDefinitionV2) {
 		def.Spec.RunDuration = "3s"
-		def.Spec.Suspended = false
+		def.Spec.ExecutionSettings.Suspended = false
 	})
 	require.NotEmpty(t, name)
 
@@ -115,7 +121,10 @@ func Test_Backfill_CompletedDuplicate(t *testing.T) {
 }
 
 func Test_Backfill_Cancelled(t *testing.T) {
-	name := createTestStreamDefinition(t, false, "30s", true)
+	name := helpers.NewTestStream(t, clientSet, func(def *v2.TestStreamDefinitionV2) {
+		def.Spec.RunDuration = "30s"
+		def.Spec.ExecutionSettings.Suspended = true
+	})
 	require.NotEmpty(t, name)
 
 	clientSet := versionedv1.NewForConfigOrDie(kubeConfig)

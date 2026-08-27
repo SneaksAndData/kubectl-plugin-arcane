@@ -4,10 +4,12 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"testing"
+	"time"
+
 	v1 "github.com/SneaksAndData/arcane-operator/pkg/apis/streaming/v1"
 	versionedv1 "github.com/SneaksAndData/arcane-operator/pkg/generated/clientset/versioned"
 	streamapis "github.com/SneaksAndData/arcane-operator/services/controllers/stream"
-	mockv1 "github.com/SneaksAndData/arcane-stream-mock/pkg/apis/streaming/v1"
 	mockversionedv1 "github.com/SneaksAndData/arcane-stream-mock/pkg/generated/clientset/versioned"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/interfaces"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/tests/helpers"
@@ -17,8 +19,6 @@ import (
 	"k8s.io/klog/v2"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"testing"
-	"time"
 )
 
 var _ interfaces.ClientProvider = (*FakeClientProvider)(nil)
@@ -42,6 +42,8 @@ func NewFakeClientProvider(clientSet *versionedv1.Clientset, unstructuredClient 
 		unstructuredClient: unstructuredClient,
 	}
 }
+
+const testStreamClass = "arcane-stream-mock-v2"
 
 var (
 	kubeconfigCmd string
@@ -74,14 +76,6 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
-func createTestStreamDefinition(t *testing.T, shouldFail bool, runDuration string, suspended bool) string {
-	return helpers.NewTestStream(t, clientSet, func(def *mockv1.TestStreamDefinition) {
-		def.Spec.ShouldFail = shouldFail
-		def.Spec.RunDuration = runDuration
-		def.Spec.Suspended = suspended
-	})
-}
-
 func findBackfillRequestByName(ctx context.Context, namespace string, name string) (*v1.BackfillRequest, error) {
 	clientSet := versionedv1.NewForConfigOrDie(kubeConfig)
 	backfillList, err := clientSet.StreamingV1().BackfillRequests(namespace).List(ctx, metav1.ListOptions{})
@@ -98,7 +92,7 @@ func findBackfillRequestByName(ctx context.Context, namespace string, name strin
 
 func waitForPhase(t *testing.T, name string, phase streamapis.Phase) error {
 	return wait.PollUntilContextCancel(t.Context(), 1*time.Second, true, func(ctx context.Context) (done bool, err error) {
-		s, err := clientSet.StreamingV1().TestStreamDefinitions("default").Get(t.Context(), name, metav1.GetOptions{})
+		s, err := clientSet.StreamingV2().TestStreamDefinitionV2s("default").Get(t.Context(), name, metav1.GetOptions{})
 		if err != nil {
 			return false, err
 		}

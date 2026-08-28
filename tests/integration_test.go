@@ -11,11 +11,17 @@ import (
 	"testing"
 	"time"
 
+	"github.com/SneaksAndData/arcane-operator/services/controllers/stream"
 	"github.com/SneaksAndData/arcane-stream-mock/pkg/apis/streaming/v2"
 	mockversionedv1 "github.com/SneaksAndData/arcane-stream-mock/pkg/generated/clientset/versioned"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/services/interfaces"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/tests/helpers"
 	"github.com/stretchr/testify/require"
+	batchv1 "k8s.io/api/batch/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/kubernetes"
 )
 
 func Test_Start(t *testing.T) {
@@ -67,7 +73,7 @@ func Test_Backfill_Wait(t *testing.T) {
 			def.Spec.ShouldFail = false
 			def.GenerateName = "integration-test-backfill-wait-"
 		},
-		func(ctx context.Context, clientSet *mockversionedv1.Clientset, namespace string, name string) error {
+		func(ctx context.Context, clientSet *mockversionedv1.Clientset, name string, namespace string) error {
 			return helpers.UnsuspendTestStreamDefinition(ctx, clientSet, name, namespace)
 		},
 		"kubectl arcane stream backfill arcane-stream-mock-v2 %s --wait --namespace integration-tests",
@@ -147,9 +153,51 @@ func Test_DowntimeDetails(t *testing.T) {
 	)
 }
 
+func Test_BackfillOverride(t *testing.T) {
+	name := runIntegrationTest(t,
+		func(def *v2.TestStreamDefinitionV2) {
+			def.Namespace = "integration-tests"
+			def.Spec.RunDuration = "10m"
+			def.Spec.ExecutionSettings.Suspended = true
+			def.Spec.ShouldFail = false
+			def.GenerateName = "integration-test-backfill-override-"
+		},
+		func(ctx context.Context, clientSet *mockversionedv1.Clientset, name string, namespace string) error {
+			err := helpers.WaitForPhase(t, clientSet, name, namespace, stream.Suspended)
+			if err != nil {
+				return err
+			}
+			return helpers.UnsuspendTestStreamDefinition(ctx, clientSet, name, namespace)
+		},
+		"kubectl arcane stream backfill arcane-stream-mock-v2 %s --namespace integration-tests --override .spec.shouldFail=true",
+	)
+	var job *batchv1.Job
+	err := wait.PollUntilContextCancel(t.Context(), 1*time.Second, true, func(ctx context.Context) (done bool, err error) {
+		job, err = kubernetesClientSet.BatchV1().Jobs("integration-tests").Get(ctx, name, metav1.GetOptions{})
+		if err != nil && errors.IsNotFound(err) {
+			return false, nil
+		}
+		if err != nil {
+			return false, err
+		}
+		return job.Labels["arcane/backfilling"] == "true", nil
+	})
+	require.NoError(t, err)
+
+	t.Logf("Job name %s", job.Name)
+	for env := range job.Spec.Template.Spec.Containers[0].Env {
+		t.Logf("Found env variable %s with value %s", job.Spec.Template.Spec.Containers[0].Env[env].Name, job.Spec.Template.Spec.Containers[0].Env[env].Value)
+		if job.Spec.Template.Spec.Containers[0].Env[env].Name == "STREAMCONTEXT__OVERRIDE" {
+			return
+		}
+	}
+	require.Fail(t, "STREAMCONTEXT__OVERRIDE was not found in job")
+}
+
 var (
-	clientSet     *mockversionedv1.Clientset
-	kubeconfigCmd string
+	clientSet           *mockversionedv1.Clientset
+	kubeconfigCmd       string
+	kubernetesClientSet *kubernetes.Clientset
 )
 
 func TestMain(m *testing.M) {
@@ -193,7 +241,14 @@ func TestMain(m *testing.M) {
 	}
 
 	clientSet, err = mockversionedv1.NewForConfig(kubeConfig)
-	require.NoError(nil, err, "error creating kubernetes clientProvider")
+	if err != nil {
+		panic(fmt.Errorf("error building clientSet: %w", err))
+	}
+
+	kubernetesClientSet, err = kubernetes.NewForConfig(kubeConfig)
+	if err != nil {
+		panic(fmt.Errorf("error building kubernetesClientSet: %w", err))
+	}
 
 	// Set KUBECONFIG environment variable
 	err = os.Setenv("KUBECONFIG", kubeconfigPath)
@@ -212,7 +267,7 @@ func runCommand(ctx context.Context, args string) ([]byte, error) {
 	return cmd.CombinedOutput()
 }
 
-func runIntegrationTest(t *testing.T, setup func(def *v2.TestStreamDefinitionV2), before func(context.Context, *mockversionedv1.Clientset, string, string) error, commandTemplate string) {
+func runIntegrationTest(t *testing.T, setup func(def *v2.TestStreamDefinitionV2), before func(context.Context, *mockversionedv1.Clientset, string, string) error, commandTemplate string) string {
 	name := helpers.NewTestStream(t, clientSet, setup)
 	require.NotEmpty(t, name)
 
@@ -233,4 +288,6 @@ func runIntegrationTest(t *testing.T, setup func(def *v2.TestStreamDefinitionV2)
 		t.Fatalf("Command failed: %v\nOutput: %s", err, string(output))
 	}
 	t.Logf("Command output:\n%s", string(output))
+
+	return name
 }

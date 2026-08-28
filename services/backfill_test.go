@@ -66,7 +66,7 @@ func Test_Backfill_Duplicate(t *testing.T) {
 	})
 	require.NotEmpty(t, name)
 
-	err := waitForPhase(t, name, streamapis.Backfilling)
+	err := helpers.WaitForPhase(t, clientSet, name, "default", streamapis.Backfilling)
 	require.NoError(t, err)
 
 	clientSet := versionedv1.NewForConfigOrDie(kubeConfig)
@@ -95,12 +95,12 @@ func Test_Backfill_CompletedDuplicate(t *testing.T) {
 	})
 	require.NotEmpty(t, name)
 
-	err := waitForPhase(t, name, streamapis.Running)
+	err := helpers.WaitForPhase(t, clientSet, name, "default", streamapis.Running)
 	require.NoError(t, err)
 
-	clientSet := versionedv1.NewForConfigOrDie(kubeConfig)
+	versionedClientSet := versionedv1.NewForConfigOrDie(kubeConfig)
 
-	backfillService := newBackfillService(NewFakeClientProvider(clientSet, nil))
+	backfillService := newBackfillService(NewFakeClientProvider(versionedClientSet, nil))
 
 	err = backfillService.Backfill(t.Context(), &models.BackfillParameters{
 		Namespace:   "default",
@@ -110,10 +110,10 @@ func Test_Backfill_CompletedDuplicate(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	err = waitForPhase(t, name, streamapis.Running)
+	err = helpers.WaitForPhase(t, clientSet, name, "default", streamapis.Running)
 	require.NoError(t, err)
 
-	backfillList, err := clientSet.StreamingV1().BackfillRequests("default").List(t.Context(), metav1.ListOptions{
+	backfillList, err := versionedClientSet.StreamingV1().BackfillRequests("default").List(t.Context(), metav1.ListOptions{
 		FieldSelector: fmt.Sprintf("spec.streamId=%s", name),
 	})
 	require.NoError(t, err)

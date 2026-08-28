@@ -66,7 +66,7 @@ func TestGeneratePayload_IgnoresNonSpecAndHandlesConflicts(t *testing.T) {
 		".spec.a.b=nested-value",
 		".spec.empty",
 		".status.ignored=ignored",
-		"spec.alsoIgnored=ignored",
+		".spec.alsoIgnored=ignored",
 	})
 
 	require.NoError(t, err)

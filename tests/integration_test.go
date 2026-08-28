@@ -210,7 +210,7 @@ func Test_BackfillCatchup(t *testing.T) {
 			}
 			return helpers.UnsuspendTestStreamDefinition(ctx, clientSet, name, namespace)
 		},
-		"kubectl arcane stream catchup arcane-stream-mock-v2 %s --namespace integration-tests --override",
+		"kubectl arcane stream catchup arcane-stream-mock-v2 %s --namespace integration-tests",
 	)
 	var job *batchv1.Job
 	err := wait.PollUntilContextCancel(t.Context(), 1*time.Second, true, func(ctx context.Context) (done bool, err error) {

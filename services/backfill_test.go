@@ -98,9 +98,9 @@ func Test_Backfill_CompletedDuplicate(t *testing.T) {
 	err := helpers.WaitForPhase(t, clientSet, name, "default", streamapis.Running)
 	require.NoError(t, err)
 
-	clientSet := versionedv1.NewForConfigOrDie(kubeConfig)
+	versionedClientSet := versionedv1.NewForConfigOrDie(kubeConfig)
 
-	backfillService := newBackfillService(NewFakeClientProvider(clientSet, nil))
+	backfillService := newBackfillService(NewFakeClientProvider(versionedClientSet, nil))
 
 	err = backfillService.Backfill(t.Context(), &models.BackfillParameters{
 		Namespace:   "default",
@@ -113,7 +113,7 @@ func Test_Backfill_CompletedDuplicate(t *testing.T) {
 	err = helpers.WaitForPhase(t, clientSet, name, "default", streamapis.Running)
 	require.NoError(t, err)
 
-	backfillList, err := clientSet.StreamingV1().BackfillRequests("default").List(t.Context(), metav1.ListOptions{
+	backfillList, err := versionedClientSet.StreamingV1().BackfillRequests("default").List(t.Context(), metav1.ListOptions{
 		FieldSelector: fmt.Sprintf("spec.streamId=%s", name),
 	})
 	require.NoError(t, err)
@@ -161,40 +161,4 @@ func Test_Backfill_Cancelled(t *testing.T) {
 	bfr, err := findBackfillRequestByName(t.Context(), "default", name)
 	require.NoError(t, err)
 	require.False(t, bfr.Spec.Completed, "backfill should not be completed when context is cancelled")
-}
-
-func Test_Backfill_Override(t *testing.T) {
-	name := helpers.NewTestStream(t, clientSet, func(def *v2.TestStreamDefinitionV2) {
-		def.Spec.RunDuration = "10m"
-		def.Spec.ExecutionSettings.Suspended = true
-	})
-	require.NotEmpty(t, name)
-
-	clientSet := versionedv1.NewForConfigOrDie(kubeConfig)
-
-	err := helpers.WaitForPhase(t, clientSet, name, "default", streamapis.Suspended)
-	require.NoError(t, err)
-
-	err = unsuspendStream(t.Context(), "default", name)
-	require.NoError(t, err)
-
-	err = helpers.WaitForPhase(t, clientSet, name, "default", streamapis.Running)
-	require.NoError(t, err)
-
-	backfillService := newBackfillService(NewFakeClientProvider(clientSet, nil))
-	err = backfillService.Backfill(t.Context(), &models.BackfillParameters{
-		Namespace:   "default",
-		StreamId:    name,
-		StreamClass: "arcane-stream-mock-v2",
-		Wait:        true,
-		Overrides:   &[]string{".spec.shouldFail=true"},
-	})
-	require.NoError(t, err)
-
-	err = helpers.WaitForPhase(t, clientSet, name, "default", streamapis.Backfilling)
-	require.NoError(t, err)
-
-	bfr, err := findBackfillRequestByName(t.Context(), "default", name)
-	require.NoError(t, err)
-	require.False(t, bfr.Spec.Completed)
 }

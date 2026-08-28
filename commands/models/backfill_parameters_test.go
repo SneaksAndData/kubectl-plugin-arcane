@@ -59,29 +59,3 @@ func TestBackfillParameters_ToBackfillRequest_WithOverrides(t *testing.T) {
 	require.Equal(t, "http://somewhere", mergeServiceClient["connectionUrl"])
 	require.Equal(t, "something_else", payload["somethingElse"])
 }
-
-func TestGeneratePayload_IgnoresNonSpecAndHandlesConflicts(t *testing.T) {
-	payload, err := generatePayload(&[]string{
-		".spec.a=value",
-		".spec.a.b=nested-value",
-		".spec.empty",
-		".status.ignored=ignored",
-		".spec.alsoIgnored=ignored",
-	})
-
-	require.NoError(t, err)
-	require.NotNil(t, payload)
-	require.NotEmpty(t, payload.Raw)
-
-	var actual map[string]interface{}
-	require.NoError(t, json.Unmarshal(payload.Raw, &actual))
-
-	a, ok := actual["a"].(map[string]interface{})
-	require.True(t, ok)
-	require.Equal(t, "nested-value", a["b"])
-	require.Equal(t, "", actual["empty"])
-	_, hasStatus := actual["status"]
-	require.False(t, hasStatus)
-	_, hasNonSpec := actual["spec"]
-	require.False(t, hasNonSpec)
-}

@@ -14,7 +14,7 @@ type StreamCatchup interface {
 }
 
 // NewStreamCatchup creates a new instance of the StreamCatchup command, which runs a stream catchup operation.
-func NewStreamCatchup(catchupService interfaces.BackfillService, configFlags *genericclioptions.ConfigFlags) StreamCatchup { // coverage-ignore
+func NewStreamCatchup(backfillService interfaces.BackfillService, configFlags *genericclioptions.ConfigFlags) StreamCatchup { // coverage-ignore
 	var overrides []string
 	overrides = append(overrides, ".spec.backfillBehavior=Merge")
 	cmd := cobra.Command{
@@ -26,7 +26,7 @@ func NewStreamCatchup(catchupService interfaces.BackfillService, configFlags *ge
 			if err != nil {
 				return err
 			}
-			return catchupService.Backfill(cmd.Context(), parameters)
+			return backfillService.Backfill(cmd.Context(), parameters)
 		},
 	}
 	command := catchupCommand{

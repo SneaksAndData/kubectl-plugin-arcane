@@ -17,10 +17,7 @@ import (
 	"github.com/sneaksAndData/kubectl-plugin-arcane/services/interfaces"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/tests/helpers"
 	"github.com/stretchr/testify/require"
-	batchv1 "k8s.io/api/batch/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/api/batch/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -171,27 +168,10 @@ func Test_BackfillOverride(t *testing.T) {
 		},
 		"kubectl arcane stream backfill arcane-stream-mock-v2 %s --namespace integration-tests --override .spec.shouldFail=true",
 	)
-	var job *batchv1.Job
-	err := wait.PollUntilContextCancel(t.Context(), 1*time.Second, true, func(ctx context.Context) (done bool, err error) {
-		job, err = kubernetesClientSet.BatchV1().Jobs("integration-tests").Get(ctx, name, metav1.GetOptions{})
-		if err != nil && errors.IsNotFound(err) {
-			return false, nil
-		}
-		if err != nil {
-			return false, err
-		}
-		return job.Labels["arcane/backfilling"] == "true", nil
-	})
-	require.NoError(t, err)
 
-	t.Logf("Job name %s", job.Name)
-	for env := range job.Spec.Template.Spec.Containers[0].Env {
-		t.Logf("Found env variable %s with value %s", job.Spec.Template.Spec.Containers[0].Env[env].Name, job.Spec.Template.Spec.Containers[0].Env[env].Value)
-		if job.Spec.Template.Spec.Containers[0].Env[env].Name == "STREAMCONTEXT__OVERRIDE" {
-			return
-		}
-	}
-	require.Fail(t, "STREAMCONTEXT__OVERRIDE was not found in job")
+	helpers.ValidateJob(t, kubernetesClientSet, name, func(t *testing.T, job *v1.Job) {
+		helpers.CheckEnvironmentVariable(t, job, "STREAMCONTEXT__OVERRIDE")
+	})
 }
 
 func Test_BackfillCatchup(t *testing.T) {
@@ -212,27 +192,10 @@ func Test_BackfillCatchup(t *testing.T) {
 		},
 		"kubectl arcane stream catchup arcane-stream-mock-v2 %s --namespace integration-tests",
 	)
-	var job *batchv1.Job
-	err := wait.PollUntilContextCancel(t.Context(), 1*time.Second, true, func(ctx context.Context) (done bool, err error) {
-		job, err = kubernetesClientSet.BatchV1().Jobs("integration-tests").Get(ctx, name, metav1.GetOptions{})
-		if err != nil && errors.IsNotFound(err) {
-			return false, nil
-		}
-		if err != nil {
-			return false, err
-		}
-		return job.Labels["arcane/backfilling"] == "true", nil
-	})
-	require.NoError(t, err)
 
-	t.Logf("Job name %s", job.Name)
-	for env := range job.Spec.Template.Spec.Containers[0].Env {
-		t.Logf("Found env variable %s with value %s", job.Spec.Template.Spec.Containers[0].Env[env].Name, job.Spec.Template.Spec.Containers[0].Env[env].Value)
-		if job.Spec.Template.Spec.Containers[0].Env[env].Name == "STREAMCONTEXT__OVERRIDE" {
-			return
-		}
-	}
-	require.Fail(t, "STREAMCONTEXT__OVERRIDE was not found in job")
+	helpers.ValidateJob(t, kubernetesClientSet, name, func(t *testing.T, job *v1.Job) {
+		helpers.CheckEnvironmentVariable(t, job, "STREAMCONTEXT__OVERRIDE")
+	})
 }
 
 var (

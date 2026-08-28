@@ -79,6 +79,8 @@ func generatePayload(overrides *[]string) (*runtime.RawExtension, error) {
 		if strings.HasPrefix(key, ".spec.") {
 			cleanKey := strings.TrimPrefix(key, ".spec.")
 			setNestedValue(nestedSpecMap, cleanKey, value)
+		} else {
+			return nil, fmt.Errorf("invalid override key: %s, should start with .spec", key)
 		}
 	}
 

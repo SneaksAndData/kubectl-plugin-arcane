@@ -5,16 +5,13 @@ import (
 	"flag"
 	"fmt"
 	"testing"
-	"time"
 
 	v1 "github.com/SneaksAndData/arcane-operator/pkg/apis/streaming/v1"
 	versionedv1 "github.com/SneaksAndData/arcane-operator/pkg/generated/clientset/versioned"
-	streamapis "github.com/SneaksAndData/arcane-operator/services/controllers/stream"
 	mockversionedv1 "github.com/SneaksAndData/arcane-stream-mock/pkg/generated/clientset/versioned"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/interfaces"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/tests/helpers"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/rest"
 	"k8s.io/klog/v2"
 	controllerruntime "sigs.k8s.io/controller-runtime"
@@ -88,14 +85,4 @@ func findBackfillRequestByName(ctx context.Context, namespace string, name strin
 		}
 	}
 	return nil, fmt.Errorf("backfill request for stream %s not found in namespace %s", name, namespace)
-}
-
-func waitForPhase(t *testing.T, name string, phase streamapis.Phase) error {
-	return wait.PollUntilContextCancel(t.Context(), 1*time.Second, true, func(ctx context.Context) (done bool, err error) {
-		s, err := clientSet.StreamingV2().TestStreamDefinitionV2s("default").Get(t.Context(), name, metav1.GetOptions{})
-		if err != nil {
-			return false, err
-		}
-		return s.Status.Phase == string(phase), nil
-	})
 }

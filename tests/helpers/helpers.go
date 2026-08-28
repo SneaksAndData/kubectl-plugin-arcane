@@ -7,12 +7,15 @@ import (
 	"os/exec"
 	"strings"
 	"testing"
+	"time"
 
+	stream2 "github.com/SneaksAndData/arcane-operator/services/controllers/stream"
 	"github.com/SneaksAndData/arcane-stream-mock/pkg/apis/streaming/v2"
 	mockversionedv1 "github.com/SneaksAndData/arcane-stream-mock/pkg/generated/clientset/versioned"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -68,7 +71,7 @@ func NewTestStream(t *testing.T, clientSet *mockversionedv1.Clientset, configure
 	return stream.Name
 }
 
-func UnsuspendTestStreamDefinition(ctx context.Context, clientSet *mockversionedv1.Clientset, namespace string, name string) error {
+func UnsuspendTestStreamDefinition(ctx context.Context, clientSet *mockversionedv1.Clientset, name string, namespace string) error {
 	testStreamDefinition, err := clientSet.StreamingV2().TestStreamDefinitionV2s(namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
 		return fmt.Errorf("error reading test stream definition %s/%s: %w", namespace, name, err)
@@ -125,4 +128,14 @@ func ReadKubeconfig(kubeconfigCmd string) (*rest.Config, error) {
 	}
 
 	return DeserializeKubeconfig(output)
+}
+
+func WaitForPhase(t *testing.T, clientSet *mockversionedv1.Clientset, name string, namespace string, phase stream2.Phase) error {
+	return wait.PollUntilContextCancel(t.Context(), 1*time.Second, true, func(ctx context.Context) (done bool, err error) {
+		s, err := clientSet.StreamingV2().TestStreamDefinitionV2s(namespace).Get(t.Context(), name, metav1.GetOptions{})
+		if err != nil {
+			return false, err
+		}
+		return s.Status.Phase == string(phase), nil
+	})
 }

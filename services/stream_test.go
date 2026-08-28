@@ -21,7 +21,7 @@ func Test_StreamStarted(t *testing.T) {
 	})
 	require.NotEmpty(t, name)
 
-	err := waitForPhase(t, name, streamapis.Suspended)
+	err := helpers.WaitForPhase(t, clientSet, name, "default", streamapis.Suspended)
 	require.NoError(t, err)
 	streamingClientSet := versionedv1.NewForConfigOrDie(kubeConfig)
 
@@ -47,7 +47,7 @@ func Test_StreamStarted_Error(t *testing.T) {
 	})
 	require.NotEmpty(t, name)
 
-	err := waitForPhase(t, name, streamapis.Running)
+	err := helpers.WaitForPhase(t, clientSet, name, "default", streamapis.Running)
 	require.NoError(t, err)
 
 	streamingClientSet := versionedv1.NewForConfigOrDie(kubeConfig)
@@ -69,7 +69,7 @@ func Test_StreamStopped(t *testing.T) {
 		def.Spec.RunDuration = "15s"
 	})
 	require.NotEmpty(t, name)
-	err := waitForPhase(t, name, streamapis.Running)
+	err := helpers.WaitForPhase(t, clientSet, name, "default", streamapis.Running)
 	require.NoError(t, err)
 
 	streamingClientSet := versionedv1.NewForConfigOrDie(kubeConfig)
@@ -95,7 +95,7 @@ func Test_StreamStopped_Error(t *testing.T) {
 		def.Spec.ExecutionSettings.Suspended = true
 	})
 	require.NotEmpty(t, name)
-	err := waitForPhase(t, name, streamapis.Suspended)
+	err := helpers.WaitForPhase(t, clientSet, name, "default", streamapis.Suspended)
 	require.NoError(t, err)
 
 	streamingClientSet := versionedv1.NewForConfigOrDie(kubeConfig)

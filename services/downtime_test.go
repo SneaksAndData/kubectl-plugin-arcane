@@ -31,7 +31,7 @@ func TestDowntime_DeclareDowntime(t *testing.T) {
 	})
 	require.NotEmpty(t, name)
 
-	err := waitForPhase(t, name, streamapis.Suspended)
+	err := helpers.WaitForPhase(t, clientSet, name, "default", streamapis.Suspended)
 	require.NoError(t, err)
 
 	err = WakeUp(t, name)
@@ -51,7 +51,7 @@ func TestDowntime_DeclareDowntime(t *testing.T) {
 	s, err := clientSet.StreamingV2().TestStreamDefinitionV2s("default").Get(t.Context(), name, metav1.GetOptions{})
 	require.NoError(t, err)
 
-	err = waitForPhase(t, name, streamapis.Suspended)
+	err = helpers.WaitForPhase(t, clientSet, name, "default", streamapis.Suspended)
 	require.NoError(t, err)
 	require.Contains(t, s.Labels, interfaces.DowntimeLabelKey)
 	require.Contains(t, s.Annotations, interfaces.DowntimeBeginAnnotationKey)
@@ -75,7 +75,7 @@ func TestDowntime_StopDowntime(t *testing.T) {
 	})
 	require.NotEmpty(t, name)
 
-	err := waitForPhase(t, name, streamapis.Suspended)
+	err := helpers.WaitForPhase(t, clientSet, name, "default", streamapis.Suspended)
 	require.NoError(t, err)
 
 	downtimeService := createDowntimeService(t)
@@ -88,7 +88,7 @@ func TestDowntime_StopDowntime(t *testing.T) {
 	require.NoError(t, err)
 
 	// Assert
-	err = waitForPhase(t, name, streamapis.Suspended)
+	err = helpers.WaitForPhase(t, clientSet, name, "default", streamapis.Suspended)
 	require.NoError(t, err)
 
 	s, err := clientSet.StreamingV2().TestStreamDefinitionV2s("default").Get(t.Context(), name, metav1.GetOptions{})
@@ -115,7 +115,7 @@ func TestDowntime_List_NoFilter(t *testing.T) {
 			def.GenerateName = pattern
 		})
 		require.NotEmpty(t, name)
-		err := waitForPhase(t, name, streamapis.Suspended)
+		err := helpers.WaitForPhase(t, clientSet, name, "default", streamapis.Suspended)
 		require.NoError(t, err)
 	}
 
@@ -151,7 +151,7 @@ func TestDowntime_Details_NoFilter(t *testing.T) {
 			def.GenerateName = pattern
 		})
 		require.NotEmpty(t, name)
-		err := waitForPhase(t, name, streamapis.Suspended)
+		err := helpers.WaitForPhase(t, clientSet, name, "default", streamapis.Suspended)
 		require.NoError(t, err)
 	}
 
@@ -195,5 +195,5 @@ func WakeUp(t *testing.T, name string) error {
 		return err
 	}
 
-	return waitForPhase(t, name, streamapis.Running)
+	return helpers.WaitForPhase(t, clientSet, name, "default", streamapis.Running)
 }

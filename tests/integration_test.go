@@ -73,7 +73,7 @@ func Test_Backfill_Wait(t *testing.T) {
 			def.Spec.ShouldFail = false
 			def.GenerateName = "integration-test-backfill-wait-"
 		},
-		func(ctx context.Context, clientSet *mockversionedv1.Clientset, namespace string, name string) error {
+		func(ctx context.Context, clientSet *mockversionedv1.Clientset, name string, namespace string) error {
 			return helpers.UnsuspendTestStreamDefinition(ctx, clientSet, name, namespace)
 		},
 		"kubectl arcane stream backfill arcane-stream-mock-v2 %s --wait --namespace integration-tests",

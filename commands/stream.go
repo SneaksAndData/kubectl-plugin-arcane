@@ -11,7 +11,7 @@ type StreamCommand interface {
 }
 
 // NewStreamCommand creates a new instance of the StreamCommand, which includes the start, stop and backfill subcommands.
-func NewStreamCommand(start StreamStart, stop StreamStop, backfill StreamBackfill) StreamCommand { // coverage-ignore (trivial)
+func NewStreamCommand(start StreamStart, stop StreamStop, backfill StreamBackfill, catchup StreamCatchup) StreamCommand { // coverage-ignore (trivial)
 	cmd := cobra.Command{
 		Use:   "stream",
 		Short: "Interact with individual streams, including starting, stopping and backfilling",
@@ -19,6 +19,7 @@ func NewStreamCommand(start StreamStart, stop StreamStop, backfill StreamBackfil
 	cmd.AddCommand(start.GetCommand())
 	cmd.AddCommand(stop.GetCommand())
 	cmd.AddCommand(backfill.GetCommand())
+	cmd.AddCommand(catchup.GetCommand())
 
 	return internal.NewGenericCommand(&cmd)
 }

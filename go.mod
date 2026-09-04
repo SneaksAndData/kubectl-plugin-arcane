@@ -3,7 +3,7 @@ module github.com/sneaksAndData/kubectl-plugin-arcane
 go 1.26.0
 
 require (
-	github.com/SneaksAndData/arcane-operator v1.1.11
+	github.com/SneaksAndData/arcane-operator v1.1.12-0.20260904115624-d9ab273d40f6
 	github.com/SneaksAndData/arcane-stream-mock v1.0.15
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.11.1

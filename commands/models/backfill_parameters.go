@@ -18,7 +18,7 @@ type BackfillParameters struct {
 	StreamId    string    // The unique identifier of the stream to backfill.
 	Wait        bool      // Whether to wait for the backfill operation to complete before returning.
 	Namespace   string    // The namespace in which the stream is located. If empty, the default namespace will be used.
-	overrides   *[]string // List of overrides to apply to the backfill operation, in the format "key=value".
+	Overrides   *[]string // List of Overrides to apply to the backfill operation, in the format "key=value".
 }
 
 // NewBackfillParameters creates a new instance of BackfillParameters based on the provided command and arguments.
@@ -39,14 +39,14 @@ func NewBackfillParameters(cmd *cobra.Command, args []string, configFlags *gener
 		StreamId:    args[1],
 		Wait:        wait,
 		Namespace:   namespace,
-		overrides:   overrides,
+		Overrides:   overrides,
 	}
 
 	return bfr, nil
 }
 
 func (p BackfillParameters) ToBackfillRequest() (*v1.BackfillRequest, error) {
-	newPayload, err := generatePayload(p.overrides)
+	newPayload, err := generatePayload(p.Overrides)
 	if err != nil {
 		return nil, err
 	}

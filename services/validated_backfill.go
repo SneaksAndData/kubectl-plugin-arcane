@@ -23,7 +23,7 @@ type validatedBackfill struct {
 // NewValidatedBackfillService creates an instance of validatedBackfill, which provides validation for backfill operations.
 func NewValidatedBackfillService(clientProvider interfaces.ClientProvider) interfaces.BackfillService {
 	return &validatedBackfill{
-		backfillService: newBackfillService(clientProvider),
+		backfillService: newBackfillOverridesValidationService(clientProvider),
 		clientProvider:  clientProvider,
 	}
 }

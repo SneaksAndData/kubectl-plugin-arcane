@@ -1,6 +1,6 @@
 dependencies:
 - name: arcane-crd
   repository: oci://ghcr.io/sneaksanddata/helm
-  version: v0.0.9
-digest: sha256:7ba8b5e61cd1d882284fa977dadd853f7d03d726d68dd53c9f4ef8155365e896
-generated: "2026-07-13T14:35:17.030142+02:00"
+  version: v0.0.10
+digest: sha256:ebf6ad330f53fc8eb9b7f142d912bc227a05d92dee355749542487bfd663db2b
+generated: "2026-09-07T11:36:04.164974+02:00"

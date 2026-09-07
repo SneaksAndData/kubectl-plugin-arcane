@@ -36,6 +36,7 @@ func main() {
 		fx.Provide(commands.NewStreamBackfill),
 		fx.Provide(commands.NewDowntimeListCommand),
 		fx.Provide(commands.NewDowntimeDetailsCommand),
+		fx.Provide(commands.NewStreamCatchup),
 
 		fx.Provide(services.NewDowntimeService),
 		fx.Provide(services.NewValidatedBackfillService),

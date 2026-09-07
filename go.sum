@@ -16,6 +16,8 @@ github.com/SneaksAndData/arcane-operator v1.1.6 h1:67+E+JNZWqgAZniHsIfk7W0mO4i1Q
 github.com/SneaksAndData/arcane-operator v1.1.6/go.mod h1:gs6mYnyT8Y/zI0GqGJYIv3miUBY25LnQw9bbgAO92S4=
 github.com/SneaksAndData/arcane-operator v1.1.11 h1:odMO6oDt4F43JuR9Igr3Irjj1ZiHDaFyd/RkxM0srRQ=
 github.com/SneaksAndData/arcane-operator v1.1.11/go.mod h1:UW+54YNlil5hB/GIcdIFLsL+bksc9F3tx5un6iY7vB8=
+github.com/SneaksAndData/arcane-operator v1.1.12-0.20260904115624-d9ab273d40f6 h1:0J9i+QgH+Ysnnypl/pmxgJz+5gPo9l2UMz12A2FRDco=
+github.com/SneaksAndData/arcane-operator v1.1.12-0.20260904115624-d9ab273d40f6/go.mod h1:UW+54YNlil5hB/GIcdIFLsL+bksc9F3tx5un6iY7vB8=
 github.com/SneaksAndData/arcane-stream-mock v1.0.9 h1:0utWtOaA/E3OmPTg4VVAmzIFl5jABD931x8wGup74Ms=
 github.com/SneaksAndData/arcane-stream-mock v1.0.9/go.mod h1:cuRPj0LTePT5zdhqVCqs8Yd24DwHmDFo3igIbj3Wt2Q=
 github.com/SneaksAndData/arcane-stream-mock v1.0.12 h1:Lk3ThhUblG5kpTPYJvlaqsCnS++9eJE+KApevc8ouR0=

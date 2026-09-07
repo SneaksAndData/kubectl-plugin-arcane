@@ -25,7 +25,7 @@ func TestNewBackfillParameters(t *testing.T) {
 	require.Equal(t, "stream-class", parameters.StreamClass)
 	require.Equal(t, "stream-id", parameters.StreamId)
 	require.True(t, parameters.Wait)
-	require.Equal(t, &overrides, parameters.overrides)
+	require.Equal(t, &overrides, parameters.Overrides)
 }
 
 func TestBackfillParameters_ToBackfillRequest_WithOverrides(t *testing.T) {
@@ -33,7 +33,7 @@ func TestBackfillParameters_ToBackfillRequest_WithOverrides(t *testing.T) {
 		StreamClass: "stream-class",
 		StreamId:    "stream-id",
 		Namespace:   "default",
-		overrides: &[]string{
+		Overrides: &[]string{
 			".spec.backfillBehavior=merge",
 			".spec.sink.mergeServiceClient.connectionUrl=http://somewhere",
 			".spec.somethingElse=something_else",

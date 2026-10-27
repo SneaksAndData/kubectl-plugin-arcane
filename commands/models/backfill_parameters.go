@@ -14,15 +14,16 @@ import (
 
 // BackfillParameters represents the parameters required to perform a backfill operation for a stream.
 type BackfillParameters struct {
-	StreamClass string    // The class of the stream to backfill.
-	StreamId    string    // The unique identifier of the stream to backfill.
-	Wait        bool      // Whether to wait for the backfill operation to complete before returning.
-	Namespace   string    // The namespace in which the stream is located. If empty, the default namespace will be used.
-	Overrides   *[]string // List of Overrides to apply to the backfill operation, in the format "key=value".
+	StreamClass  string          // The class of the stream to backfill.
+	StreamId     string          // The unique identifier of the stream to backfill.
+	Wait         bool            // Whether to wait for the backfill operation to complete before returning.
+	Namespace    string          // The namespace in which the stream is located. If empty, the default namespace will be used.
+	Overrides    *[]string       // List of Overrides to apply to the backfill operation, in the format "key=value".
+	BackfillType v1.BackfillType // The type of backfill request to create, e.g. data or migration.
 }
 
 // NewBackfillParameters creates a new instance of BackfillParameters based on the provided command and arguments.
-func NewBackfillParameters(cmd *cobra.Command, args []string, configFlags *genericclioptions.ConfigFlags, overrides *[]string) (*BackfillParameters, error) { // coverage-ignore (tested in integration tests)
+func NewBackfillParameters(cmd *cobra.Command, args []string, configFlags *genericclioptions.ConfigFlags, overrides *[]string, backfillType v1.BackfillType) (*BackfillParameters, error) { // coverage-ignore (tested in integration tests)
 
 	wait, err := cmd.Flags().GetBool("wait")
 	if err != nil {
@@ -35,11 +36,12 @@ func NewBackfillParameters(cmd *cobra.Command, args []string, configFlags *gener
 	}
 
 	bfr := &BackfillParameters{
-		StreamClass: args[0],
-		StreamId:    args[1],
-		Wait:        wait,
-		Namespace:   namespace,
-		Overrides:   overrides,
+		StreamClass:  args[0],
+		StreamId:     args[1],
+		Wait:         wait,
+		Namespace:    namespace,
+		Overrides:    overrides,
+		BackfillType: backfillType,
 	}
 
 	return bfr, nil
@@ -58,7 +60,7 @@ func (p BackfillParameters) ToBackfillRequest() (*v1.BackfillRequest, error) {
 			StreamClass:  p.StreamClass,
 			StreamId:     p.StreamId,
 			Payload:      newPayload,
-			BackfillType: v1.BackfillTypeData,
+			BackfillType: p.BackfillType,
 		},
 	}
 	return bfr, nil

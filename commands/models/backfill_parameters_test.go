@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	v1 "github.com/SneaksAndData/arcane-operator/pkg/apis/streaming/v1"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -20,19 +21,34 @@ func TestNewBackfillParameters(t *testing.T) {
 		".spec.sink.mergeServiceClient.connectionUrl=http://somewhere",
 	}
 
-	parameters, err := NewBackfillParameters(cmd, []string{"stream-class", "stream-id"}, configFlags, &overrides)
+	parameters, err := NewBackfillParameters(cmd, []string{"stream-class", "stream-id"}, configFlags, &overrides, v1.BackfillTypeData)
 	require.NoError(t, err)
 	require.Equal(t, "stream-class", parameters.StreamClass)
 	require.Equal(t, "stream-id", parameters.StreamId)
 	require.True(t, parameters.Wait)
 	require.Equal(t, &overrides, parameters.Overrides)
+	require.Equal(t, v1.BackfillTypeData, parameters.BackfillType)
+}
+
+func TestBackfillParameters_ToBackfillRequest_WithBackfillType(t *testing.T) {
+	parameters := BackfillParameters{
+		StreamClass:  "stream-class",
+		StreamId:     "stream-id",
+		Namespace:    "default",
+		BackfillType: v1.BackfillTypeMigration,
+	}
+
+	request, err := parameters.ToBackfillRequest()
+	require.NoError(t, err)
+	require.Equal(t, v1.BackfillTypeMigration, request.Spec.BackfillType)
 }
 
 func TestBackfillParameters_ToBackfillRequest_WithOverrides(t *testing.T) {
 	parameters := BackfillParameters{
-		StreamClass: "stream-class",
-		StreamId:    "stream-id",
-		Namespace:   "default",
+		StreamClass:  "stream-class",
+		StreamId:     "stream-id",
+		Namespace:    "default",
+		BackfillType: v1.BackfillTypeData,
 		Overrides: &[]string{
 			".spec.backfillBehavior=merge",
 			".spec.sink.mergeServiceClient.connectionUrl=http://somewhere",

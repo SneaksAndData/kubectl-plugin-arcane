@@ -1,6 +1,7 @@
 package commands
 
 import (
+	v1 "github.com/SneaksAndData/arcane-operator/pkg/apis/streaming/v1"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/interfaces"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/internal"
 	"github.com/sneaksAndData/kubectl-plugin-arcane/commands/models"
@@ -21,7 +22,7 @@ func NewStreamBackfill(backfillService interfaces.BackfillService, configFlags *
 		Args:  cobra.ExactArgs(2),
 		Short: "Run a stream in backfill mode",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			parameters, err := models.NewBackfillParameters(cmd, args, configFlags, &overrides)
+			parameters, err := models.NewBackfillParameters(cmd, args, configFlags, &overrides, v1.BackfillTypeData)
 			if err != nil {
 				return err
 			}

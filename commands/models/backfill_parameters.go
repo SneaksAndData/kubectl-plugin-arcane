@@ -55,9 +55,10 @@ func (p BackfillParameters) ToBackfillRequest() (*v1.BackfillRequest, error) {
 			GenerateName: fmt.Sprintf("%s-manual-", p.StreamId),
 		},
 		Spec: v1.BackfillRequestSpec{
-			StreamClass: p.StreamClass,
-			StreamId:    p.StreamId,
-			Payload:     newPayload,
+			StreamClass:  p.StreamClass,
+			StreamId:     p.StreamId,
+			Payload:      newPayload,
+			BackfillType: v1.BackfillTypeData,
 		},
 	}
 	return bfr, nil

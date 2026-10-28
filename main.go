@@ -34,6 +34,7 @@ func main() {
 		fx.Provide(commands.NewStreamStop),
 		fx.Provide(commands.NewStreamStart),
 		fx.Provide(commands.NewStreamBackfill),
+		fx.Provide(commands.NewStreamMigrate),
 		fx.Provide(commands.NewDowntimeListCommand),
 		fx.Provide(commands.NewDowntimeDetailsCommand),
 		fx.Provide(commands.NewStreamCatchup),

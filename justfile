@@ -25,7 +25,7 @@ install-stream:
 operator:
     helm upgrade --install arcane-operator oci://ghcr.io/sneaksanddata/helm/arcane-operator \
         --namespace default \
-        --version v1.1.11
+        --version v1.2.0
 
 mock-stream-plugin:
     helm upgrade --install arcane-stream-mock oci://ghcr.io/sneaksanddata/helm/arcane-stream-mock \

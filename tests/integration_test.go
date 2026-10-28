@@ -170,7 +170,7 @@ func Test_BackfillOverride(t *testing.T) {
 	)
 
 	helpers.ValidateJob(t, kubernetesClientSet, name, func(t *testing.T, job *v1.Job) {
-		helpers.CheckEnvironmentVariable(t, job, "STREAMCONTEXT__OVERRIDE")
+		helpers.CheckEnvironmentVariable(t, job, "STREAMCONTEXT__SPEC_OVERRIDE")
 	})
 }
 
@@ -194,7 +194,31 @@ func Test_BackfillCatchup(t *testing.T) {
 	)
 
 	helpers.ValidateJob(t, kubernetesClientSet, name, func(t *testing.T, job *v1.Job) {
-		helpers.CheckEnvironmentVariable(t, job, "STREAMCONTEXT__OVERRIDE")
+		helpers.CheckEnvironmentVariable(t, job, "STREAMCONTEXT__SPEC_OVERRIDE")
+	})
+}
+
+func Test_Migrate(t *testing.T) {
+	name := runIntegrationTest(t,
+		func(def *v2.TestStreamDefinitionV2) {
+			def.Namespace = "integration-tests"
+			def.Spec.RunDuration = "10m"
+			def.Spec.ExecutionSettings.Suspended = true
+			def.Spec.ShouldFail = false
+			def.GenerateName = "integration-test-migrate-"
+		},
+		func(ctx context.Context, clientSet *mockversionedv1.Clientset, name string, namespace string) error {
+			err := helpers.WaitForPhase(t, clientSet, name, namespace, stream.Suspended)
+			if err != nil {
+				return err
+			}
+			return helpers.UnsuspendTestStreamDefinition(ctx, clientSet, name, namespace)
+		},
+		"kubectl arcane stream migrate arcane-stream-mock-v2 %s --namespace integration-tests",
+	)
+
+	helpers.ValidateJob(t, kubernetesClientSet, name, func(t *testing.T, job *v1.Job) {
+		helpers.CheckEnvironmentVariableValue(t, job, "STREAMCONTEXT__RUNMODE", "migrate")
 	})
 }
 

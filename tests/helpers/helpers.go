@@ -170,3 +170,15 @@ func CheckEnvironmentVariable(t *testing.T, job *v1.Job, variable string) {
 	}
 	require.Failf(t, "%s was not found in job", variable)
 }
+
+func CheckEnvironmentVariableValue(t *testing.T, job *v1.Job, variable string, value string) {
+	t.Logf("Job name %s", job.Name)
+	for env := range job.Spec.Template.Spec.Containers[0].Env {
+		t.Logf("Found env variable %s with value %s", job.Spec.Template.Spec.Containers[0].Env[env].Name, job.Spec.Template.Spec.Containers[0].Env[env].Value)
+		if job.Spec.Template.Spec.Containers[0].Env[env].Name == variable {
+			require.Equal(t, value, job.Spec.Template.Spec.Containers[0].Env[env].Value)
+			return
+		}
+	}
+	require.Failf(t, "%s was not found in job", variable)
+}

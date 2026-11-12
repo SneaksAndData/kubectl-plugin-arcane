@@ -51,7 +51,7 @@ jobs:
 
       - name: Check test coverage
         id: coverage
-        uses: vladopajic/go-test-coverage@v2
+        uses: vladopajic/go-test-coverage@v2.21.0
         continue-on-error: true # Should fail after coverage comment is posted
         with:
           config: .testcoverage.yaml

@@ -195,7 +195,7 @@ func Test_BackfillCatchup(t *testing.T) {
 
 	helpers.ValidateJob(t, kubernetesClientSet, name, func(t *testing.T, job *v1.Job) {
 		helpers.CheckEnvironmentVariableValue(t, job, "STREAMCONTEXT__SPEC_OVERRIDE", func(t *testing.T, value string) {
-			require.NotEqual(t, "{\"backfillBehavior\":\"Merge\"}", value)
+			require.Equal(t, "{\"backfillBehavior\":\"Merge\"}", value)
 		})
 	})
 }

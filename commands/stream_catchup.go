@@ -17,13 +17,13 @@ type StreamCatchup interface {
 // NewStreamCatchup creates a new instance of the StreamCatchup command, which runs a stream catchup operation.
 func NewStreamCatchup(backfillService interfaces.BackfillService, configFlags *genericclioptions.ConfigFlags) StreamCatchup { // coverage-ignore
 	var overrides []string
-	overrides = append(overrides, ".spec.backfillBehavior=Merge")
 	cmd := cobra.Command{
 		Use:   "catchup <stream-class> <stream-id> [--wait]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Run a stream in the backfill mode with the backfill behavior set to Merge",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			parameters, err := models.NewBackfillParameters(cmd, args, configFlags, &overrides, v1.BackfillTypeData)
+			allOverrides := append([]string{".spec.backfillBehavior=Merge"}, overrides...)
+			parameters, err := models.NewBackfillParameters(cmd, args, configFlags, &allOverrides, v1.BackfillTypeData)
 			if err != nil {
 				return err
 			}

@@ -194,7 +194,9 @@ func Test_BackfillCatchup(t *testing.T) {
 	)
 
 	helpers.ValidateJob(t, kubernetesClientSet, name, func(t *testing.T, job *v1.Job) {
-		helpers.CheckEnvironmentVariable(t, job, "STREAMCONTEXT__SPEC_OVERRIDE")
+		helpers.CheckEnvironmentVariableValue(t, job, "STREAMCONTEXT__SPEC_OVERRIDE", func(t *testing.T, value string) {
+			require.NotEqual(t, "{}", value)
+		})
 	})
 }
 
@@ -218,7 +220,9 @@ func Test_Migrate(t *testing.T) {
 	)
 
 	helpers.ValidateJob(t, kubernetesClientSet, name, func(t *testing.T, job *v1.Job) {
-		helpers.CheckEnvironmentVariableValue(t, job, "STREAMCONTEXT__RUNMODE", "migrate")
+		helpers.CheckEnvironmentVariableValue(t, job, "STREAMCONTEXT__RUNMODE", func(t *testing.T, value string) {
+			require.Equal(t, "migrate", value)
+		})
 	})
 }
 
